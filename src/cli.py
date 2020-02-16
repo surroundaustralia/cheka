@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import argparse
+from cheka import Cheka
 
 
 # used to determine whether or not a given path is actually a real file
@@ -23,7 +24,8 @@ if __name__ == '__main__':
 
     parser.add_argument(
         '-p', '--profiles',
-        help='The profiles hierarchy, an RDF file, that relates the Profiles and Standards for which you want to extract validating Profile Resources.',
+        help='The profiles hierarchy, an RDF file, that relates the Profiles and Standards for which you want to '
+             'extract validating Profile Resources.',
         type=lambda x: is_valid_file(parser, x),
         required=True
     )
@@ -31,7 +33,10 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # do stuff
-    with open(args.profiles.name) as f:
-        print(len(f.readlines()))
-
-    print('end')
+    c = Cheka(args.data.name, args.profiles.name)
+    v = c.validate(profile_uri='http://example.org/profile/Profile_B')
+    if v[0]:
+        print('valid')
+    else:
+        print('invalid')
+        print(v[2])

@@ -1,6 +1,6 @@
 import rdflib
 from rdflib.namespace import DCTERMS
-from os.path import dirname, realpath, join, abspath
+from os.path import dirname, realpath, join
 import requests
 from pyshacl import validate
 
@@ -36,8 +36,12 @@ class Cheka:
             exit()
 
     def _find_validation_targets(self):
+        objects_profiles = []
         for s, o in self.dg.subject_objects(DCTERMS.conformsTo):
-            print('Stub _find_validation_targets(): {} -> {}'.format(s, o))
+            objects_profiles.append((s, o))
+            # print('Stub _find_validation_targets(): {} -> {}'.format(s, o))
+
+        return objects_profiles
 
     def _parse_shacl_files_for_profile(self, profile_uri):
         self.sg = rdflib.Graph()
@@ -70,15 +74,40 @@ class Cheka:
                         format=r.headers['Content-Type']
                     )
 
-    def validate(self, profile_uri):
+    def _validate_against_hierarchy(self, data_graph, profile_uri):
         self._parse_shacl_files_for_profile(profile_uri)
 
         # use pySHACL to validate data graph against all shapes graphs
         r = validate(
-            self.dg,
+            data_graph,
             shacl_graph=self.sg,
             # inference='rdfs', # not sure if this should be used
             abort_on_error=False
         )
         # conforms, results_graph, results_text = r
         return r
+
+    def validate(self, profile_uri=None):
+        if profile_uri is not None:
+            # get profile_uris from data graph for all things claiming conformance
+            valid = True
+            validation_graph = rdflib.Graph()
+            validation_messages = []
+            for pair in self._find_validation_targets():
+                object_uri, profile_uri = pair
+                # extract from self.dg just the object to be validated
+                mini_graph = rdflib.Graph()
+                for s, p, o in self.dg.triples((object_uri, None, None)):
+                    mini_graph.add((s, p, o))
+
+                # validate the object against the profile hierarchy it claims conformance to
+                mini_result = self._validate_against_hierarchy(mini_graph, profile_uri)
+                if not mini_result[0]:  # i.e. invalid
+                    valid = False
+                    validation_graph += mini_result[1]
+                    validation_messages.append(mini_result[2])
+
+            # emulate pySHACL's return style
+            return [valid, validation_graph, validation_messages]
+        else:
+            return self._validate_against_hierarchy(self.dg, profile_uri)
