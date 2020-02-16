@@ -78,21 +78,21 @@ class Cheka:
         self._parse_shacl_files_for_profile(profile_uri)
 
         # use pySHACL to validate data graph against all shapes graphs
-        r = validate(
+        valid, v_graph, v_msg = validate(
             data_graph,
             shacl_graph=self.sg,
             # inference='rdfs', # not sure if this should be used
             abort_on_error=False
         )
         # conforms, results_graph, results_text = r
-        return r
+        return (valid, v_graph, v_msg, profile_uri)
 
     def validate(self, profile_uri=None):
-        if profile_uri is not None:
+        if profile_uri is None:
             # get profile_uris from data graph for all things claiming conformance
             valid = True
-            validation_graph = rdflib.Graph()
-            validation_messages = []
+            v_graph = rdflib.Graph()
+            v_msg = []
             for pair in self._find_validation_targets():
                 object_uri, profile_uri = pair
                 # extract from self.dg just the object to be validated
@@ -104,10 +104,10 @@ class Cheka:
                 mini_result = self._validate_against_hierarchy(mini_graph, profile_uri)
                 if not mini_result[0]:  # i.e. invalid
                     valid = False
-                    validation_graph += mini_result[1]
-                    validation_messages.append(mini_result[2])
+                    v_graph += mini_result[1]
+                    v_msg.append(mini_result[2])
 
-            # emulate pySHACL's return style
-            return [valid, validation_graph, validation_messages]
+            # emulate pySHACL's return style + profile URI
+            return (valid, v_graph, v_msg, profile_uri)
         else:
             return self._validate_against_hierarchy(self.dg, profile_uri)
