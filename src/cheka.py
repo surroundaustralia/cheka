@@ -6,6 +6,9 @@ from pyshacl import validate
 
 
 class Cheka:
+    """The Cheka program main class that contains all of the functionality
+
+    """
     def __init__(self, data_graph_file_path, profiles_graph_file_path):
         # parse input RDF files
         self.profiles_graph_file_path = profiles_graph_file_path
