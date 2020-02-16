@@ -1,4 +1,4 @@
-<img src="style/cheka.png" style="height:200px;" />
+<img src="https://bitbucket.org/surroundbitbucket/cheka/raw/master/style/cheka.png" style="height:200px;" />
 
 # CHEKA
 A profile hierarchy-based RDF graph validation tool written in Python
@@ -9,7 +9,7 @@ Cheka uses [Profiles Vocabulary (PROF)](https://www.w3.org/TR/dx-prof/) descript
 
 
 ## Installation
-*comng!*
+*coming!*
 
 
 ## Use
