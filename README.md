@@ -1,4 +1,4 @@
-<img src="https://bitbucket.org/surroundbitbucket/cheka/raw/master/style/cheka.png" style="height:200px;" />
+![](https://bitbucket.org/surroundbitbucket/cheka/raw/master/style/cheka.png)
 
 # CHEKA
 A profile hierarchy-based RDF graph validation tool written in Python
