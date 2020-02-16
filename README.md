@@ -1,8 +1,6 @@
 ![](https://bitbucket.org/surroundbitbucket/cheka/raw/master/style/cheka.png)
 
 # CHEKA
-***Nick: Cheka doesn't work yet - this is just the framing notes***  
-
 A profile hierarchy-based RDF graph validation tool written in Python
 
 This tool validates a data graph against a set of SHACL shape graphs that it extracts from a hierachy of Profiles (and Standards). It uses the claimed conformance of data in the data graph to a Profile to collate and then use all the validator SHACL files within the hierarchy of other Profiles and Standards which that Profile profiles.
@@ -11,12 +9,14 @@ Cheka uses [Profiles Vocabulary (PROF)](https://www.w3.org/TR/dx-prof/) descript
 
 
 ## Installation
-*coming!*
+1. Ensure Python 3 in enabled on your system
+2. install requirements in *requirements.txt*, e.g. `~$ pip3 install -r requirements.txt`
+3. Execute scripts as per *Use* below
 
 
 ## Use
 ### Input requirements
-To use Cheka, you must supply it with both a data graph to be validated and a profiles hierarchy. It will then use conformance claims in the data graph to validate objects within it using validating resources it locates using the profiles hairarchy.
+To use Cheka, you must supply it with both a data graph to be validated and a profiles hierarchy. It will then use conformance claims in the data graph to validate objects within it using validating resources it locates using the profiles hierarchy.
 
 
 #### Data graph
@@ -35,7 +35,7 @@ Typically this will look like this:
 
 This says that `<Object_X>` is meant to conform to `<Profile_Z>`.
 
-See the `examples/` folder for example data graphs.
+See the `tests/` folder for example data graphs.
 
 
 ### Profiles hierarchy
@@ -46,24 +46,25 @@ This must also be an RDF file that contains a hierarchy of `prof:Profile` object
 @prefix prof: <http://www.w3.org/ns/dx/prof/> .
 @prefix role:  <http://www.w3.org/ns/dx/prof/role/> .
 
+
 <Standard_A>
     a dct:Standard ;
     prof:hasResource [
         a prof:ResourceDescriptor ;
-        prof:hasRole role:validation .
+        prof:hasRole role:validation ;
         prof:hasArtifact <File_or_Uri_J> ;
     ]
-    ...
+.
 
 <Profile_B>
     a prof:Profile ;
     prof:isProfileOf <Standard_A> ;
     prof:hasResource <Resource_Descriptor_P> ;
-    ...    
+.   
 
-<Resource_Descriptor_P> ;
+<Resource_Descriptor_P>
     a prof:ResourceDescriptor ;
-    prof:hasRole role:validation .
+    prof:hasRole role:validation ;
     prof:hasArtifact <File_or_Uri_K> ;
 .
 
@@ -72,36 +73,39 @@ This must also be an RDF file that contains a hierarchy of `prof:Profile` object
     prof:isProfileOf <Profile_B> ;    
     prof:hasResource [
         a prof:ResourceDescriptor ;
-        prof:hasRole role:validation .
+        prof:hasRole role:validation ;
         prof:hasArtifact <File_or_Uri_L> ;
-    ]
-    ...
+    ] ;
+.
 ```
 
 This says `<Profile_C>` is a profile of `<Profile_B>` which is, in turn, a profile of `<Standard_A>`. The two profiles and the standard have resources `<File_or_Uri_J>`, `<File_or_Uri_K>` & `<File_or_Uri_L>` respectively which are indicated to be validators by the `prof:ResourceDescriptor` classes that associate them with their profiles/standard.
 
+See the `tests/` folder for example profiles graphs.
 
 
 ### Running
+Cheka uses the profiles graph to find all the SHACL validators it needs to validate a data graph. It returns a pySHACL result of [conforms, results_graph, results_text] with *conforms* being either True or False.
+
 #### As a Python command line utility
 ```
-~$ python3 cheka.py -d DATAGRAPH -p PROFILES-HIERARCHY
+~$ python3 cli.py -d DATA-GRAPH-FILE -p PROFILES-GRAPH-FILE
 ```
-* `DATAGRAPH` - The data graph, an RDF file, which is being validated
-* `PROFILES-HIERARCHY` - the Profiles Vocabulary hierarchy, an RDF file, that relates the Profiles and Standards for which you want to extract validating Profile Resources
+* `DATA-GRAPH-FILE` - The data graph, an RDF file, which is being validated
+* `PROFILES-GRAPH-FILE` - The profiles hierarchy, an RDF file, that relates the Profiles and Standards for which you want to extract validating Profile Resources
 
-If you make the cheka.py script executable (`sudo chmod a+x cheka.py`) then you can run it like this:
+If you make the cli.py script executable (`sudo chmod a+x cli.py`) then you can run it like this:
 
 ```
-~$ ./cheka.py -d DATAGRAPH -p PROFILES-HIERARCHY
+~$ ./cli.py -d DATA-GRAPH-FILE -p PROFILES-GRAPH-FILE
 ```
 
 
 #### As a BASH script
-The file `cheka` in the `bin/` drirectory is a BASH shell script that calls `cheka.py`. Make it executable (`sudo chmod a+x cheka`) then you can run it like this:
+The file `cheka` in the `bin/` drirectory is a BASH shell script that calls `cli.py`. Make it executable (`sudo chmod a+x cheka`) then you can run it like this:
 
 ```
-~$ ./cheka -d DATAGRAPH -p PROFILES-HIERARCHY
+~$ ./cheka -d DATA-GRAPH-FILE -p PROFILES-GRAPH-FILE
 ```
 
 

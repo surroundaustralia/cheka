@@ -1,0 +1,40 @@
+@prefix dct: <http://purl.org/dc/terms/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sdo: <https://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix void: <http://rdfs.org/ns/void#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@base <https://data.surroundaustralia.com/shapes/dataset/> .
+
+
+# this shape ensures a Dataset has a title/label
+<TitleShape>
+	a sh:NodeShape ;
+	sh:targetClass skos:ConceptScheme ;
+    sh:message "A void:Dataset must have either a skos:prefLabel, dct:title or rdfs:label property (a Literal) and may only have at most one of each per language." ;
+    sh:xone (
+        [
+            sh:property [
+                sh:path skos:prefLabel ;
+                sh:minCount 1 ;
+                sh:uniqueLang true ;
+            ]
+        ]
+        [
+            sh:property [
+                sh:path dct:title ;
+                sh:minCount 1 ;
+                sh:uniqueLang true ;
+            ]
+        ]
+        [
+            sh:property [
+                sh:path rdfs:label ;
+                sh:minCount 1 ;
+                sh:uniqueLang true ;
+            ]
+        ]
+    ) ;
+.
