@@ -1,6 +1,8 @@
 ![](https://bitbucket.org/surroundbitbucket/cheka/raw/master/style/cheka.png)
 
 # CHEKA
+***Nick: Cheka doesn't work yet - this is just the framing notes***  
+
 A profile hierarchy-based RDF graph validation tool written in Python
 
 This tool validates a data graph against a set of SHACL shape graphs that it extracts from a hierachy of Profiles (and Standards). It uses the claimed conformance of data in the data graph to a Profile to collate and then use all the validator SHACL files within the hierarchy of other Profiles and Standards which that Profile profiles.
