@@ -10,23 +10,27 @@ class Cheka:
 
     """
     def __init__(self, data_graph_file_path, profiles_graph_file_path):
+        self.dg = rdflib.Graph()
+        self.pg = rdflib.Graph()
+        self.sg = rdflib.Graph()
+
         # parse input RDF files
         self.profiles_graph_file_path = profiles_graph_file_path
         self._parse_inputs(data_graph_file_path, profiles_graph_file_path)
 
         # find all the things in the data graph that need to be validated
-        self._find_validation_targets()
+        self.things_to_validate = self._find_validation_targets()
     
     def _parse_inputs(self, data_graph_file_path, profiles_graph_file_path):
         try:
             # data graph
-            self.dg = rdflib.Graph().parse(
+            self.dg.parse(
                 data_graph_file_path, 
                 format=rdflib.util.guess_format(data_graph_file_path)
             )
 
             # profiles graph
-            self.pg = rdflib.Graph().parse(
+            self.pg.parse(
                 profiles_graph_file_path, 
                 format=rdflib.util.guess_format(profiles_graph_file_path)
             )
@@ -47,8 +51,12 @@ class Cheka:
         return objects_profiles
 
     def _parse_shacl_files_for_profile(self, profile_uri):
-        self.sg = rdflib.Graph()
+        """Parses the profiles hierarchy graph and collects and merges all the SHACL validator resources within the
+        given Profile, indicated by profile_uri,'s hierarchy
 
+        :param profile_uri:
+        :return:
+        """
         q = '''
             SELECT ?shacl_file
             WHERE {{
@@ -77,12 +85,13 @@ class Cheka:
                         format=r.headers['Content-Type']
                     )
 
-    def _validate_against_hierarchy(self, data_graph, profile_uri):
+    def _validate_against_hierarchy(self, profile_uri):
+        # establish the self.sg instance variable shapes graph
         self._parse_shacl_files_for_profile(profile_uri)
 
         # use pySHACL to validate data graph against all shapes graphs
         valid, v_graph, v_msg = validate(
-            data_graph,
+            self.dg,
             shacl_graph=self.sg,
             # inference='rdfs', # not sure if this should be used
             abort_on_error=False
@@ -97,6 +106,7 @@ class Cheka:
             v_graph = rdflib.Graph()
             v_msg = []
             for pair in self._find_validation_targets():
+                # TODO: figure out how to validate only the portion of the self.dg claiming conformance to each profile
                 object_uri, profile_uri = pair
                 # extract from self.dg just the object to be validated
                 mini_graph = rdflib.Graph()
@@ -104,7 +114,7 @@ class Cheka:
                     mini_graph.add((s, p, o))
 
                 # validate the object against the profile hierarchy it claims conformance to
-                mini_result = self._validate_against_hierarchy(mini_graph, profile_uri)
+                mini_result = self._validate_against_hierarchy(profile_uri)
                 if not mini_result[0]:  # i.e. invalid
                     valid = False
                     v_graph += mini_result[1]
@@ -113,4 +123,5 @@ class Cheka:
             # emulate pySHACL's return style + profile URI
             return (valid, v_graph, v_msg, profile_uri)
         else:
-            return self._validate_against_hierarchy(self.dg, profile_uri)
+            # profile_uri is set
+            return self._validate_against_hierarchy(profile_uri)

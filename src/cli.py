@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import argparse
+import pprint
 from cheka import Cheka
 
 
@@ -30,13 +31,20 @@ if __name__ == '__main__':
         required=True
     )
 
+    parser.add_argument(
+        '-u', '--uri',
+        help='The specific profile URI that you wish to validate the data graph against. This need not be set, in which'
+             'case, Cheka will look for conformance claims (dct:conformsTo) in the data graph.',
+        type=str
+    )
+
     args = parser.parse_args()
 
     # do stuff
     c = Cheka(args.data.name, args.profiles.name)
-    v = c.validate(profile_uri='http://example.org/profile/Profile_B')
+    v = c.validate(profile_uri=args.uri)
     if v[0]:
-        print('valid')
+        pprint.pprint('valid')
     else:
-        print('invalid')
-        print(v[2])
+        pprint.pprint('invalid')
+        pprint.pprint(v[2])
