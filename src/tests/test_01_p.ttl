@@ -10,7 +10,7 @@
     prof:hasResource [
         a prof:ResourceDescriptor ;
         prof:hasRole role:validation ;
-        prof:hasArtifact local_file:01_shacl_j.ttl ;
+        prof:hasArtifact local_file:test_01_shacl_j.ttl ;
     ]
 .
 
@@ -23,7 +23,7 @@
 <Resource_Descriptor_P>
     a prof:ResourceDescriptor ;
     prof:hasRole role:validation ;
-    prof:hasArtifact local_file:01_shacl_k.ttl ;
+    prof:hasArtifact local_file:test_01_shacl_k.ttl ;
 .
 
 <Profile_C>
@@ -32,6 +32,6 @@
     prof:hasResource [
         a prof:ResourceDescriptor ;
         prof:hasRole role:validation ;
-        prof:hasArtifact local_file:01_shacl_l.ttl ;
+        prof:hasArtifact local_file:test_01_shacl_l.ttl ;
     ] ;
 .
