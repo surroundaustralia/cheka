@@ -202,9 +202,13 @@ Or the following RDF:
 
 ## Contacts
 
+*publisher:*  
+<img src="https://surroundaustralia.com/images/SURROUND-logo-trans.png" style="height: 100px;" />  
+**SURROUND Australia Pty. Ltd.**  
+<https://surroundaustrlaia.com>  
+
 *creator:*  
 **Nicholas J. Car**  
 *Data Systems Architect*  
 SURROUND Australia Pty. Ltd.  
 <nicholas.car@surroudaustralia.com>  
-<https://surroundaustrlaia.com>
