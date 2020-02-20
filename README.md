@@ -165,7 +165,7 @@ Note [Citation](#citation) below for attribution.
 To cite this software, please use the following BibTex:
 
 ```
-@software{hadoop,
+@software{cheka,
   author = {{Nicholas J. Car}},
   title = {Cheka: A profile hierarchy-based RDF graph validation tool written in Python},
   url = {https://surroundaustralia.com/cheka},
