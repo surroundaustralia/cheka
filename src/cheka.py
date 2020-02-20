@@ -58,6 +58,8 @@ class Cheka:
                 ?r prof:hasArtifact ?shacl_file .
             }}
             '''
+        # TODO: indicated graphs already stored in memory to avoid repeated parsing
+        # TODO: pickle parsed RDF files for future stateless use
         for r in self.pg.query(q.format(profile_uri)):
             if str(r['shacl_file']).startswith('file://'):
                 # this is a local file
@@ -86,6 +88,10 @@ class Cheka:
         regardless of conformance claims in the data graph
         :return:
         """
+        # testing inputs
+        if by_class and instance_uri is not None:
+            raise IOError('You must not set both by_class to True and give instance_uri a value simultaneously')
+        # for testing - print('validate(): {}, {}, {}'.format(by_class, instance_uri, profile_uri))
         # if by_class is True, validate things by class (i.e. not by instance_uri)
         if by_class:
             # ignore instance_uri
@@ -97,6 +103,7 @@ class Cheka:
                 # use pySHACL to validate data graph against all shapes graphs
                 valid, v_graph, v_msg = validate(
                     self.dg,
+                    meta_shacl=True,  # validate the SHACL graph first
                     shacl_graph=self.sg,
                     # inference='rdfs', # not sure if this should be used
                     abort_on_error=False
@@ -118,7 +125,7 @@ class Cheka:
                 # if a profile_uri is not given, look for conformance claims for validation target. Can by multiple
                 else:
                     for o in self.dg.objects(subject=rdflib.URIRef(instance_uri), predicate=DCTERMS.conformsTo):
-                        instances_for_validation.append((instance_uri, o))
+                        instances_for_validation.append((str(instance_uri), str(o)))
             # if an instance_uri is not set, extract all things from data graph with conformance claims for validation
             else:
                 # if a profile_uri is given, indicate instances are to be validated using that only
@@ -162,7 +169,7 @@ class Cheka:
                     abort_on_error=False
                 )
 
-                if not local_valid[0]:  # i.e. invalid
+                if not local_valid:  # i.e. invalid
                     valid = False
                     v_graph += local_v_graph
                     v_msg.append(local_v_msg)
