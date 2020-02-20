@@ -171,6 +171,7 @@ To cite this software, please use the following BibTex:
   url = {https://surroundaustralia.com/cheka},
   version = {0.5},
   date = {2020},
+  publisher = "SURROUND Australia Pty. Ltd."
 }
 ```
 
