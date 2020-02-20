@@ -32,7 +32,14 @@ if __name__ == '__main__':
     )
 
     parser.add_argument(
-        '-u', '--uri',
+        '-i', '--instance-uri',
+        help='The specific profile URI that you wish to validate the data graph against. This need not be set, in which'
+             'case, Cheka will look for conformance claims (dct:conformsTo) in the data graph.',
+        type=str
+    )
+
+    parser.add_argument(
+        '-u', '--profile-uri',
         help='The specific profile URI that you wish to validate the data graph against. This need not be set, in which'
              'case, Cheka will look for conformance claims (dct:conformsTo) in the data graph.',
         type=str
