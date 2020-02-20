@@ -1,5 +1,6 @@
 ![](style/cheka.png)
 
+![](https://zenodo.org/badge/DOI/10.5281/zenodo.3676330.svg)  
 # CHEKA
 A profile hierarchy-based RDF graph validation tool written in Python
 
@@ -165,13 +166,14 @@ Note [Citation](#citation) below for attribution.
 To cite this software, please use the following BibTex:
 
 ```
-@software{cheka,
+@software{10.5281/zenodo.3676330,
   author = {{Nicholas J. Car}},
   title = {Cheka: A profile hierarchy-based RDF graph validation tool written in Python},
-  url = {https://surroundaustralia.com/cheka},
   version = {0.5},
   date = {2020},
-  publisher = "SURROUND Australia Pty. Ltd."
+  publisher = "SURROUND Australia Pty. Ltd.",
+  doi = {10.5281/zenodo.3676330},
+  url = {https://doi.org/10.5281/zenodo.3676330}
 }
 ```
 
@@ -184,7 +186,7 @@ Or the following RDF:
 @prefix wiki: <https://www.wikidata.org/wiki/> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-<https://surroundaustralia.com/cheka>
+<https://doi.org/10.5281/zenodo.3676330>
     a sdo:SoftwareSourceCode , owl:NamedIndividual ;
     sdo:codeRepository <https://github.com/surroundaustralia/cheka> ;
     dcterms:type wiki:Q7397 ; # "software"
