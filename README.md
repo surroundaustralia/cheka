@@ -203,9 +203,9 @@ Or the following RDF:
 ## Contacts
 
 *publisher:*  
-<img src="https://surroundaustralia.com/images/SURROUND-logo-trans.png" style="height: 100px;" />  
+![](style/SURROUND-logo-100.png)  
 **SURROUND Australia Pty. Ltd.**  
-<https://surroundaustrlaia.com>  
+<https://surroundaustralia.com>  
 
 *creator:*  
 **Nicholas J. Car**  
