@@ -197,7 +197,7 @@ Or the following RDF:
     dcterms:publisher [
         a sdo:Organization ;
         sdo:name "SURROUND Pty Ltd" ;
-        sdo:url <https://surrondaustralia.com> ;
+        sdo:url <https://surroundaustralia.com> ;
     ]
 .
 ```
