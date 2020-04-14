@@ -5,6 +5,7 @@ import re
 import os
 from setuptools import setup
 
+
 def open_local(paths, mode='r', encoding='utf8'):
     path = os.path.join(
         os.path.abspath(os.path.dirname(__file__)),
@@ -12,10 +13,10 @@ def open_local(paths, mode='r', encoding='utf8'):
     )
     return codecs.open(path, mode, encoding)
 
+
 with open_local(['cheka', '__init__.py'], encoding='latin1') as fp:
     try:
-        version = re.findall(r"^__version__ = '([^']+)'\r?$",
-                             fp.read(), re.M)[0]
+        version = re.findall(r"^__version__ = '([^']+)'\r?$", fp.read(), re.M)[0]
     except IndexError:
         raise RuntimeError('Unable to determine version.')
 
@@ -30,7 +31,8 @@ setup(
     packages=['cheka'],
     package_dir={'cheka': 'cheka'},
     version=version,
-    description='This tool validates a data graph against a set of SHACL shape graphs that it extracts from a hierarchy of Profiles (Standards/Specifications and/or profiles of them).',
+    description='This tool validates a data graph against a set of SHACL shape graphs that it extracts from a '
+                'hierarchy of Profiles (Standards/Specifications and/or profiles of them).',
     author='Nicholas Car',
     author_email='nicholas.car@surroundaustralia.com',
     url='https://github.com/surroundaustralia/cheka',
