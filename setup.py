@@ -33,7 +33,7 @@ setup(
     description='This tool validates a data graph against a set of SHACL shape graphs that it extracts from a hierarchy of Profiles (Standards/Specifications and/or profiles of them).',
     author='Nicholas Car',
     author_email='nicholas.car@surroundaustralia.com',
-    url='https://github.com/rdflib/pyLODE',
+    url='https://github.com/surroundaustralia/cheka',
     download_url='https://github.com/surroundaustralia/cheka/archive/{:s}.tar.gz'.format(version),
     license='LICENSE',
     keywords=['Semantic Web', 'OWL', 'ontology', 'SHACL', 'validation', 'profiles'],
