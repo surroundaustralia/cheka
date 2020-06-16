@@ -155,6 +155,9 @@ no dependencies, other than pytest and Cheka itself.
 
 Tests are annotated with what they are testing.
 
+### Test profile hierarchy
+The profiles and validators used for the tests in this code are combined in the file [test-profile.hierarchy.ttl](cheka/test/test-profile.hierarchy.ttl). This hierarchy can be used in other applications as an example of a profile hierarchy.
+
 
 ## License  
 This code is licensed using the GPL v3 licence. See the [LICENSE file](LICENSE) for the deed. 
