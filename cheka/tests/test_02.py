@@ -36,19 +36,19 @@ def test_validate():
     assert t3[0], t3[2]
 
     # should be true since <One> has title (A) & creator (B)
-    t4 = c.validate(instance_uri='http://example.org/dataset/One', profile_uri='http://example.org/profile/Profile_B')
+    t4 = c.validate(instance_uri_claim='http://example.org/dataset/One', profile_uri='http://example.org/profile/Profile_B')
     assert t4[0], t4[2]
 
     # should be true since <Two> has title (A) & creator (B)
-    t5 = c.validate(instance_uri='http://example.org/dataset/Two', profile_uri='http://example.org/profile/Profile_B')
+    t5 = c.validate(instance_uri_claim='http://example.org/dataset/Two', profile_uri='http://example.org/profile/Profile_B')
     assert t5[0], t5[2]
 
     # should be true since <One> has title (A) & creator (B) & created (C)
-    t6 = c.validate(instance_uri='http://example.org/dataset/One', profile_uri='http://example.org/profile/Profile_C')
+    t6 = c.validate(instance_uri_claim='http://example.org/dataset/One', profile_uri='http://example.org/profile/Profile_C')
     assert t6[0], t6[2]
 
     # should be false since <Two> has title (A) & creator (B) but not created (C)
-    t7 = c.validate(instance_uri='http://example.org/dataset/Two', profile_uri='http://example.org/profile/Profile_C')
+    t7 = c.validate(instance_uri_claim='http://example.org/dataset/Two', profile_uri='http://example.org/profile/Profile_C')
     assert not t7[0], t7[2]
 
     # should be true since <One> & <Two> are void:Dataset instances and both meet <B> reqs
@@ -68,6 +68,6 @@ def test_errors():
     with pytest.raises(Exception) as e_info:
         t10 = c.validate(
             by_class=True,
-            instance_uri='http://example.org/dataset/Two',
+            instance_uri_claim='http://example.org/dataset/Two',
             profile_uri='http://example.org/profile/Profile_C'
         )

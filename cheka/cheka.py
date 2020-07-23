@@ -9,38 +9,85 @@ class Cheka:
     """The Cheka program main class that contains all of the functionality
 
     """
-    def __init__(self, data_graph_file_path, profiles_graph_file_path):
+    def __init__(
+            self,
+            data_graph_obj=None,
+            data_graph_ttl=None,
+            data_graph_file_path=None,
+            profiles_graph_obj=None,
+            profiles_graph_ttl=None,
+            profiles_graph_file_path=None):
+
         self.dg = rdflib.Graph()
         self.pg = rdflib.Graph()
         self.sg = rdflib.Graph()
 
-        # parse input RDF files
-        self.profiles_graph_file_path = profiles_graph_file_path
-        self._parse_inputs(data_graph_file_path, profiles_graph_file_path)
+        # validate inputs
+        assert any(elem is None for elem in [data_graph_obj, data_graph_ttl, data_graph_file_path]), \
+            "You must supply either a data graph object, string of RDF or a file path"
 
-        # register the SHACL namespace for convenience
-        self.SH = rdflib.Namespace('http://www.w3.org/ns/shacl#')
-    
-    def _parse_inputs(self, data_graph_file_path, profiles_graph_file_path):
-        try:
-            # data graph
+        assert any(elem is None for elem in [profiles_graph_obj, profiles_graph_ttl, profiles_graph_file_path]), \
+            "You must supply either a profiles graph object, string of RDF or a file path"
+
+        if data_graph_obj is not None:
+            assert type(data_graph_obj) == rdflib.Graph, \
+                "The value data_graph_obj, if supplied, must be an in-memory RDFlib Graph object"
+
+        if data_graph_ttl is not None:
+            assert type(data_graph_ttl) == str, \
+                "The value data_graph_rdf, if supplied, must be a string, of RDF"
+
+        if data_graph_file_path is not None:
+            assert type(data_graph_file_path) == str, \
+                "The value data_graph_file_path, if supplied, must be a string, of RDF, in the Turtle format"
+
+        if profiles_graph_obj is not None:
+            assert type(profiles_graph_obj) == rdflib.Graph, \
+                "The value profiles_graph_obj, if supplied, must be an in-memory RDFlib Graph object"
+
+        if profiles_graph_ttl is not None:
+            assert type(profiles_graph_ttl) == str, \
+                "The value profiles_graph_ttl, if supplied, must be a string, of RDF, in the Turtle format"
+
+        if profiles_graph_file_path is not None:
+            assert type(profiles_graph_file_path) == str, \
+                "The value profiles_graph_file_path, if supplied, must be a string, of RDF"
+
+        # parse inputs
+        if data_graph_obj is not None:
+            self.dg = data_graph_obj
+        elif data_graph_ttl is not None:
+            try:
+                self.dg.parse(data=data_graph_ttl, format="turtle")
+            except Exception as e:
+                raise ValueError("You've supplied an invalid data_graph_ttl value. The parsing said: {}".format(e))
+        elif data_graph_file_path is not None:
             self.dg.parse(
-                data_graph_file_path, 
+                data_graph_file_path,
                 format=rdflib.util.guess_format(data_graph_file_path)
             )
 
-            # profiles graph
+        if profiles_graph_obj is not None:
+            self.pg = data_graph_obj
+        elif profiles_graph_ttl is not None:
+            self.pg.parse(data=data_graph_ttl, format="turtle")
+        elif profiles_graph_file_path is not None:
             self.pg.parse(
-                profiles_graph_file_path, 
-                format=rdflib.util.guess_format(profiles_graph_file_path)
+                profiles_graph_file_path,
+                format=rdflib.util.guess_format(data_graph_file_path)
             )
-            PROF = rdflib.Namespace('http://www.w3.org/ns/dx/prof/')
-            self.pg.bind('prof', PROF)
-            ROLE = rdflib.Namespace('http://www.w3.org/ns/dx/prof/role/')
-            self.pg.bind('role', ROLE)
-        except Exception as e:
-            print(e)
-            exit()
+            self.profiles_graph_file_path = profiles_graph_file_path
+
+        assert len(self.dg) > 0, "The Data Graph has not been able to be read"
+
+        assert len(self.pg) > 0, "The Profiles Graph has not been able to be read"
+
+        # make nice namespaces
+        self.SH = rdflib.Namespace('http://www.w3.org/ns/shacl#')
+        PROF = rdflib.Namespace('http://www.w3.org/ns/dx/prof/')
+        self.pg.bind('prof', PROF)
+        ROLE = rdflib.Namespace('http://www.w3.org/ns/dx/prof/role/')
+        self.pg.bind('role', ROLE)
 
     def _build_shapes_graph_for_profile(self, profile_uri):
         """Parses the profiles hierarchy graph and collects and merges all the SHACL validator resources within the
@@ -79,17 +126,29 @@ class Cheka:
                         format=r.headers['Content-Type']
                     )
 
-    def validate(self, by_class=False, instance_uri=None, profile_uri=None):
+    def validate(self, shacl_only=False, by_class=False, instance_uri_claim=None, profile_uri=None):
         """Validates a data graph using a shapes graph generated from a profile hierarchy
 
-        :param by_class: if this is set to True, instance_uri will be ignored and profile_uri MUST be set
-        :param instance_uri: if this is set, by_class must not be set to True
+        :param shacl_only: if this is True, Cheka will perform normal SHACL validation only
+        :param by_class: if this is True, instance_uri will be ignored and profile_uri MUST be set
+        :param instance_uri_claim: if this is set, by_class must not be set to True
         :param profile_uri: if this is set, validation against this profile and its hierarchy will be tested only,
         regardless of conformance claims in the data graph
         :return:
         """
+        if shacl_only:
+            valid, v_graph, v_msg = validate(
+                self.dg,
+                meta_shacl=True,  # validate the SHACL graph first
+                shacl_graph=self.sg,
+                # inference='rdfs', # not sure if this should be used
+                abort_on_error=False
+            )
+            # conforms, results_graph, results_text = r
+            return (valid, v_graph, v_msg, profile_uri)
+
         # testing inputs
-        if by_class and instance_uri is not None:
+        if by_class and instance_uri_claim is not None:
             raise IOError('You must not set both by_class to True and give instance_uri a value simultaneously')
         # for testing - print('validate(): {}, {}, {}'.format(by_class, instance_uri, profile_uri))
         # if by_class is True, validate things by class (i.e. not by instance_uri)
@@ -118,14 +177,14 @@ class Cheka:
             # get the list of instances to validate
             instances_for_validation = []
             # if an instance_uri is set, only list that thing for validation
-            if instance_uri is not None:
+            if instance_uri_claim is not None:
                 # if a profile_uri is given, indicate the instance is to be validated using that only
                 if profile_uri is not None:
-                    instances_for_validation.append((instance_uri, profile_uri))
+                    instances_for_validation.append((instance_uri_claim, profile_uri))
                 # if a profile_uri is not given, look for conformance claims for validation target. Can by multiple
                 else:
-                    for o in self.dg.objects(subject=rdflib.URIRef(instance_uri), predicate=DCTERMS.conformsTo):
-                        instances_for_validation.append((str(instance_uri), str(o)))
+                    for o in self.dg.objects(subject=rdflib.URIRef(instance_uri_claim), predicate=DCTERMS.conformsTo):
+                        instances_for_validation.append((str(instance_uri_claim), str(o)))
             # if an instance_uri is not set, extract all things from data graph with conformance claims for validation
             else:
                 # if a profile_uri is given, indicate instances are to be validated using that only
