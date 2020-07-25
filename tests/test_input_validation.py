@@ -1,8 +1,6 @@
-import sys
 import pytest
 from rdflib import Graph
 from cheka import Cheka
-sys.path.append('..')
 
 
 DATA_RDF = """
@@ -34,7 +32,7 @@ PROFILES_RDF = """
                     prof:hasResource [
                         a prof:ResourceDescriptor ;
                         prof:hasRole role:validation ;
-                        prof:hasArtifact local_file:test_01_shacl_j.ttl ;
+                        prof:hasArtifact <file://test_01_shacl_j.ttl> ;
                     ]
                 .
                 
@@ -47,7 +45,7 @@ PROFILES_RDF = """
                 <Resource_Descriptor_P>
                     a prof:ResourceDescriptor ;
                     prof:hasRole role:validation ;
-                    prof:hasArtifact local_file:test_01_shacl_k.ttl ;
+                    prof:hasArtifact <file://test_01_shacl_k.ttl> ;
                 .
                 
                 <Profile_C>
@@ -56,7 +54,7 @@ PROFILES_RDF = """
                     prof:hasResource [
                         a prof:ResourceDescriptor ;
                         prof:hasRole role:validation ;
-                        prof:hasArtifact local_file:test_01_shacl_l.ttl ;
+                        prof:hasArtifact <file://test_01_shacl_l.ttl> ;
                     ] ;
                 .
                 """
@@ -98,6 +96,17 @@ def test_bad_paths():
         c = Cheka(data_graph_file_path="BROKEN", profiles_graph_file_path="test_01_p.ttl")
 
 
+def test_strategies():
+    # invalid strategy
+    with pytest.raises(ValueError):
+        c = Cheka(
+            data_graph_file_path="test_01_d.ttl",
+            profiles_graph_file_path="test_01_p.ttl",
+        ).validate(strategy="other")
+
+    # profile strategy, no profile_uri given
+
+
 if __name__ == "__main__":
     test_good_strings()
     test_bad_strings()
@@ -105,3 +114,4 @@ if __name__ == "__main__":
     test_bad_graphs()
     test_good_paths()
     test_bad_paths()
+    test_strategies()

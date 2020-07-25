@@ -1,23 +1,26 @@
-import rdflib
-from rdflib.namespace import DCTERMS, RDF
+from rdflib import Graph, URIRef, Namespace
+from rdflib.namespace import DCTERMS, PROF, RDF, SH
 from os.path import dirname, realpath, join
+from rdflib.paths import ZeroOrMore
 import requests
 from pyshacl import validate
 
 
 class Cheka:
+    ROLE = Namespace("http://www.w3.org/ns/dx/prof/role/")
+
     """The Cheka program main class that contains all of the functionality
 
     """
     def __init__(
-            self,
-            data_graph_obj=None,
-            data_graph_ttl=None,
-            data_graph_file_path=None,
-            profiles_graph_obj=None,
-            profiles_graph_ttl=None,
-            profiles_graph_file_path=None):
-
+        self,
+        data_graph_obj=None,
+        data_graph_ttl=None,
+        data_graph_file_path=None,
+        profiles_graph_obj=None,
+        profiles_graph_ttl=None,
+        profiles_graph_file_path=None,
+    ):
         self.dg = rdflib.Graph()
         self.pg = rdflib.Graph()
         self.sg = rdflib.Graph()
@@ -83,19 +86,66 @@ class Cheka:
         assert len(self.pg) > 0, "The Profiles Graph has not been able to be read"
 
         # make nice namespaces
-        self.SH = rdflib.Namespace('http://www.w3.org/ns/shacl#')
-        PROF = rdflib.Namespace('http://www.w3.org/ns/dx/prof/')
         self.pg.bind('prof', PROF)
-        ROLE = rdflib.Namespace('http://www.w3.org/ns/dx/prof/role/')
-        self.pg.bind('role', ROLE)
+        self.pg.bind('sh', SH)
+        self.pg.bind('role', Cheka.ROLE)
 
-    def _build_shapes_graph_for_profile(self, profile_uri):
-        """Parses the profiles hierarchy graph and collects and merges all the SHACL validator resources within the
-        given Profile, indicated by profile_uri,'s hierarchy
+    @staticmethod
+    def get_artifact_uris(graph, profile_uri=None):
+        """Gets all the artifact URIs for all Resource Descriptors' artifacts from a profile hierarchy, where the
+        Resource Descriptor's role is "validator".
 
-        :param profile_uri:
+        If a profile_uri is given, only that profile's Resource Descriptor's artifact URIs and those of Profiles or
+        Standard it profiles are returned, else all Profiles or Standard's Resource Descriptor's artifact URIs in the
+        given graph are returned.
+
+        :param profile_uri: The URI of a prof:Profile or dcterms:Standard in the given graph
+        :type profile_uri: str
+        :return:
+        :rtype:
+        """
+        artifact_uris = []
+
+        if profile_uri is None:
+            # get all profiles' validators
+
+            # for every subject,
+            # if it's a Profile or a Standard,
+            # get all of it's ResourceDescriptors
+            # if the Role is validator,
+            # get the artifact link
+            for s, o in graph.subject_objects(predicate=RDF.type):
+                if o in [PROF.Profile, DCTERMS.Standard]:
+                    for o2 in graph.objects(subject=s, predicate=PROF.hasResource):
+                        for o3 in graph.objects(subject=o2, predicate=PROF.hasRole):
+                            if o3 == Cheka.ROLE.validation:
+                                for o4 in graph.objects(subject=o2, predicate=PROF.hasArtifact):
+                                    artifact_uris.append(str(o4))
+        else:
+            # for the given profile_uri
+            # get URIs of all the things it profiles
+            # find their RDs' artifacts, as above
+            for s, p, o in graph.triples((URIRef(profile_uri), PROF.isProfileOf*ZeroOrMore, None)):
+                for o2 in graph.objects(subject=o, predicate=PROF.hasResource):
+                    for o3 in graph.objects(subject=o2, predicate=PROF.hasRole):
+                        if o3 == Cheka.ROLE.validation:
+                            for o4 in graph.objects(subject=o2, predicate=PROF.hasArtifact):
+                                artifact_uris.append(str(o4))
+
+        return artifact_uris
+
+    def dereference_artifact_uris(self):
+        pass
+
+    def _get_shapes_from_profiles_graph(self, profile_uri=None):
+        """Parses the profiles hierarchy graph and, if no profile_uri is given, collects and merges all the SHACL
+        validator resources related to all profiles. If a profile_uri is given, collects and merges all the SHACL
+        validator resources related to the identified profile and the things it profiles.
+
+        :param profile_uri: the URI of a profile within the hierarchy
         :return:
         """
+
         q = '''
             SELECT ?shacl_file
             WHERE {{
@@ -126,7 +176,7 @@ class Cheka:
                         format=r.headers['Content-Type']
                     )
 
-    def validate(self, shacl_only=False, by_class=False, instance_uri_claim=None, profile_uri=None):
+    def validate(self, strategy="shacl", profile_uri=None, instance_uri=None):
         """Validates a data graph using a shapes graph generated from a profile hierarchy
 
         :param shacl_only: if this is True, Cheka will perform normal SHACL validation only
@@ -136,7 +186,19 @@ class Cheka:
         regardless of conformance claims in the data graph
         :return:
         """
-        if shacl_only:
+
+        strategies = [
+            "shacl",
+            "profile",
+            "instance",
+            "claims"
+        ]
+        if strategy not in strategies:
+            raise ValueError("The strategy selected must either be None or one of '{}'".format("', '".join(strategies)))
+
+        if strategy == "shacl":
+            # get all the SHACL validators for all profiles in the hierarchy
+            self._get_shapes_from_profiles_graph()
             valid, v_graph, v_msg = validate(
                 self.dg,
                 meta_shacl=True,  # validate the SHACL graph first
@@ -156,7 +218,7 @@ class Cheka:
             # ignore instance_uri
             # if profile_uri is set, only load that profile's validation resource hierarchy
             if profile_uri is not None:
-                self._build_shapes_graph_for_profile(profile_uri)
+                self._get_shapes_from_profiles_graph(profile_uri)
 
                 # validate data graph using shapes graph
                 # use pySHACL to validate data graph against all shapes graphs
@@ -202,7 +264,7 @@ class Cheka:
             v_msg = []
             for inst in instances_for_validation:
                 # build the shapes graph for this instance
-                self._build_shapes_graph_for_profile(inst[1])
+                self._get_shapes_from_profiles_graph(inst[1])
 
                 # add to the self.sg, an instance-specific sh:targetNode statement for the given instance_uri
                 # remove from self.sg, the generic targetClass statements

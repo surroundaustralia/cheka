@@ -12,7 +12,7 @@
 
 <http://example.org/profile/Profile_C> a prof:Profile ;
     prof:hasResource [ a prof:ResourceDescriptor ;
-            prof:hasArtifact local_file:test_01_shacl_l.ttl ;
+            prof:hasArtifact <file://test_01_shacl_l.ttl> ;
             prof:hasRole role:validation ] ;
     prof:isProfileOf <http://example.org/profile/Profile_B> .
 
@@ -47,11 +47,11 @@
     prof:isProfileOf <http://example.org/profile/Standard_A> .
 
 <http://example.org/profile/Resource_Descriptor_P> a prof:ResourceDescriptor ;
-    prof:hasArtifact local_file:test_01_shacl_k.ttl ;
+    prof:hasArtifact <file://test_01_shacl_k.ttl> ;
     prof:hasRole role:validation .
 
 <http://example.org/profile/Standard_A> a dct:Standard ;
     prof:hasResource [ a prof:ResourceDescriptor ;
-            prof:hasArtifact local_file:test_01_shacl_j.ttl ;
+            prof:hasArtifact <file://test_01_shacl_j.ttl> ;
             prof:hasRole role:validation ] .
 
