@@ -2,12 +2,15 @@ from rdflib import Graph, URIRef, Namespace
 from rdflib.namespace import DCTERMS, PROF, RDF, SH
 from os.path import dirname, realpath, join
 from rdflib.paths import ZeroOrMore
+from rdflib.util import guess_format
 import requests
 from pyshacl import validate
+import shutil
 
 
 class Cheka:
     ROLE = Namespace("http://www.w3.org/ns/dx/prof/role/")
+    VALIDATORS_DIR = join(dirname(__file__), "validators")
 
     """The Cheka program main class that contains all of the functionality
 
@@ -21,9 +24,9 @@ class Cheka:
         profiles_graph_ttl=None,
         profiles_graph_file_path=None,
     ):
-        self.dg = rdflib.Graph()
-        self.pg = rdflib.Graph()
-        self.sg = rdflib.Graph()
+        self.dg = Graph()
+        self.pg = Graph()
+        self.sg = Graph()
 
         # validate inputs
         assert any(elem is None for elem in [data_graph_obj, data_graph_ttl, data_graph_file_path]), \
@@ -33,7 +36,7 @@ class Cheka:
             "You must supply either a profiles graph object, string of RDF or a file path"
 
         if data_graph_obj is not None:
-            assert type(data_graph_obj) == rdflib.Graph, \
+            assert type(data_graph_obj) == Graph, \
                 "The value data_graph_obj, if supplied, must be an in-memory RDFlib Graph object"
 
         if data_graph_ttl is not None:
@@ -45,7 +48,7 @@ class Cheka:
                 "The value data_graph_file_path, if supplied, must be a string, of RDF, in the Turtle format"
 
         if profiles_graph_obj is not None:
-            assert type(profiles_graph_obj) == rdflib.Graph, \
+            assert type(profiles_graph_obj) == Graph, \
                 "The value profiles_graph_obj, if supplied, must be an in-memory RDFlib Graph object"
 
         if profiles_graph_ttl is not None:
@@ -67,17 +70,17 @@ class Cheka:
         elif data_graph_file_path is not None:
             self.dg.parse(
                 data_graph_file_path,
-                format=rdflib.util.guess_format(data_graph_file_path)
+                format=guess_format(data_graph_file_path)
             )
 
         if profiles_graph_obj is not None:
-            self.pg = data_graph_obj
+            self.pg = profiles_graph_obj
         elif profiles_graph_ttl is not None:
-            self.pg.parse(data=data_graph_ttl, format="turtle")
+            self.pg.parse(data=profiles_graph_ttl, format="turtle")
         elif profiles_graph_file_path is not None:
             self.pg.parse(
                 profiles_graph_file_path,
-                format=rdflib.util.guess_format(data_graph_file_path)
+                format=guess_format(profiles_graph_file_path)
             )
             self.profiles_graph_file_path = profiles_graph_file_path
 
@@ -90,8 +93,24 @@ class Cheka:
         self.pg.bind('sh', SH)
         self.pg.bind('role', Cheka.ROLE)
 
-    @staticmethod
-    def get_artifact_uris(graph, profile_uri=None):
+        # expand the profiles graph
+        self._expand_profiles_graph()
+
+    def _expand_profiles_graph(self):
+        # type all profiles
+        # dcterms:Standard instances are prof:Profiles instances
+        for s, p, o in self.pg.triples((None, RDF.type, DCTERMS.Standard)):
+            self.pg.add((s, RDF.type, PROF.Profile))
+        # anything using prof:isProfileOf is a prof:Profile
+        for s, p, o in self.pg.triples((None, PROF.isProfileOf, None)):
+            self.pg.add((o, RDF.type, PROF.Profile))
+
+        # type all RDs
+        # anything indicated by prof:hasResource is a prof:ResourceDescriptor
+        for s, p, o in self.pg.triples((None, PROF.hasResource, None)):
+            self.pg.add((o, RDF.type, PROF.ResourceDescriptor))
+
+    def _get_artifact_uris(self, profile_uri=None):
         """Gets all the artifact URIs for all Resource Descriptors' artifacts from a profile hierarchy, where the
         Resource Descriptor's role is "validator".
 
@@ -99,11 +118,34 @@ class Cheka:
         Standard it profiles are returned, else all Profiles or Standard's Resource Descriptor's artifact URIs in the
         given graph are returned.
 
+        For each Resource Descriptor, if there is more than one artifact URI, retrieve only the local file URI.
+
         :param profile_uri: The URI of a prof:Profile or dcterms:Standard in the given graph
         :type profile_uri: str
         :return:
         :rtype:
         """
+        def get_artifact_uris_per_profile(profile_uriref):
+            uu = []
+
+            for o2 in self.pg.objects(subject=profile_uriref, predicate=PROF.hasResource):
+                for o3 in self.pg.objects(subject=o2, predicate=PROF.hasRole):
+                    if o3 == Cheka.ROLE.validation:
+                        rds_artifact_uris = []
+                        for o4 in self.pg.objects(subject=o2, predicate=PROF.hasArtifact):
+                            rds_artifact_uris.append(str(o4))
+                        # for this RD,
+                        # prefer a file already in the VALIDATORS_DIR
+                        # over one still local, but prefer local bot in VALIDATORS_DIR
+                        # to remote
+                        u = next((x for x in rds_artifact_uris if Cheka.VALIDATORS_DIR in x), None)
+                        if u is None:
+                            u = next((x for x in rds_artifact_uris if x.startswith("file://") or x.startswith("/")), None)
+                            if u is None:
+                                u = rds_artifact_uris[0]
+                        uu.append(u)
+            return uu
+
         artifact_uris = []
 
         if profile_uri is None:
@@ -114,28 +156,94 @@ class Cheka:
             # get all of it's ResourceDescriptors
             # if the Role is validator,
             # get the artifact link
-            for s, o in graph.subject_objects(predicate=RDF.type):
-                if o in [PROF.Profile, DCTERMS.Standard]:
-                    for o2 in graph.objects(subject=s, predicate=PROF.hasResource):
-                        for o3 in graph.objects(subject=o2, predicate=PROF.hasRole):
-                            if o3 == Cheka.ROLE.validation:
-                                for o4 in graph.objects(subject=o2, predicate=PROF.hasArtifact):
-                                    artifact_uris.append(str(o4))
+            for s, o in self.pg.subject_objects(predicate=RDF.type):
+                if o == PROF.Profile:
+                    artifact_uris.extend(get_artifact_uris_per_profile(s))
         else:
             # for the given profile_uri
             # get URIs of all the things it profiles
             # find their RDs' artifacts, as above
-            for s, p, o in graph.triples((URIRef(profile_uri), PROF.isProfileOf*ZeroOrMore, None)):
-                for o2 in graph.objects(subject=o, predicate=PROF.hasResource):
-                    for o3 in graph.objects(subject=o2, predicate=PROF.hasRole):
-                        if o3 == Cheka.ROLE.validation:
-                            for o4 in graph.objects(subject=o2, predicate=PROF.hasArtifact):
-                                artifact_uris.append(str(o4))
+            for s, p, o in self.pg.triples((URIRef(profile_uri), PROF.isProfileOf*ZeroOrMore, None)):
+                artifact_uris.extend(get_artifact_uris_per_profile(o))
 
-        return artifact_uris
+        self.artifact_uris = artifact_uris
 
-    def dereference_artifact_uris(self):
-        pass
+    def _dereference_artifact_uris(self):
+        # for every URI,
+        # if it's a local file, check to see if it's already in the validators/ folder
+        # if so, do nothing
+        # if not, copy it in
+        # update URI for
+        for uri in self.artifact_uris:
+            if Cheka.VALIDATORS_DIR in uri:
+                pass  # nothing to do since it's already in the cache
+            elif uri.startswith("file://") or uri.startswith("/"):  # it is a local file
+                shutil.copyfile(
+                    uri.replace("file://", ""),
+                    join(Cheka.VALIDATORS_DIR, uri.split("/")[-1])
+                )
+                # TODO: cater for potentially pre-existing duplicated file names in validators/ from other RDs
+                # attempt write back new copy of file to self.pg
+                # find the relevant RD
+                for s in self.pg.subjects(predicate=PROF.hasArtifact, object=URIRef(uri)):
+                    self.pg.add((
+                        s,
+                        PROF.hasArtifact,
+                        URIRef(join("file://", Cheka.VALIDATORS_DIR, uri.split("/")[-1]))
+                    ))
+            else:
+                # mock URL for testing
+                if uri == "http://mock.com/artifact/validator-x.ttl":
+                    shacl_file_content = """
+                                            @prefix dct: <http://purl.org/dc/terms/> .
+                                            @prefix owl: <http://www.w3.org/2002/07/owl#> .
+                                            @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+                                            @prefix sdo: <https://schema.org/> .
+                                            @prefix sh: <http://www.w3.org/ns/shacl#> .
+                                            @prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+                                            @prefix void: <http://rdfs.org/ns/void#> .
+                                            @base <https://data.surroundaustralia.com/shapes/dataset/> .
+                                            
+                                            
+                                            # this shape adds a requirement for a dct:creator
+                                            <CreatorShape>
+                                                a sh:NodeShape ;
+                                                sh:targetClass void:Dataset ;
+                                                sh:property [
+                                                    sh:path dct:creator ;
+                                                    sh:minCount 1 ;
+                                                    sh:or (
+                                                        [
+                                                            sh:class sdo:Organization ;
+                                                        ]
+                                                        [
+                                                            sh:class sdo:Person ;
+                                                        ]
+                                                    ) ;
+                                                    sh:message "A void:Dataset must have a dct:creator property indicating an sdo:Organization or an sdo:Person" ;
+                                                ] ;
+                                            .
+                                            """
+                else:  # resolve the URI for real
+                    r = requests.get(uri)
+                    shacl_file_content = r.text
+                with open(join(Cheka.VALIDATORS_DIR, uri.split("/")[-1]), "w") as f:
+                    f.write(shacl_file_content)
+                # attempt write back new copy of file to self.pg
+                # find the relevant RD
+                for s in self.pg.subjects(predicate=PROF.hasArtifact, object=URIRef(uri)):
+                    self.pg.add((
+                        s,
+                        PROF.hasArtifact,
+                        URIRef(join("file://", Cheka.VALIDATORS_DIR, uri.split("/")[-1]))
+                    ))
+
+        # rerunning this should purge all non-VALIDATION_DIR URIs since all file should have been copied there
+        self._get_artifact_uris()
+
+    def _make_shapes_graph(self):
+        for f in self.artifact_uris:
+            self.sg.parse(f, format=guess_format(f))
 
     def _get_shapes_from_profiles_graph(self, profile_uri=None):
         """Parses the profiles hierarchy graph and, if no profile_uri is given, collects and merges all the SHACL
@@ -198,7 +306,11 @@ class Cheka:
 
         if strategy == "shacl":
             # get all the SHACL validators for all profiles in the hierarchy
-            self._get_shapes_from_profiles_graph()
+
+            self._get_artifact_uris()
+            self._dereference_artifact_uris()
+            self._make_shapes_graph()
+
             valid, v_graph, v_msg = validate(
                 self.dg,
                 meta_shacl=True,  # validate the SHACL graph first
@@ -207,7 +319,7 @@ class Cheka:
                 abort_on_error=False
             )
             # conforms, results_graph, results_text = r
-            return (valid, v_graph, v_msg, profile_uri)
+            return valid, v_graph, v_msg, profile_uri
 
         # testing inputs
         if by_class and instance_uri_claim is not None:

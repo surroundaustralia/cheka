@@ -1,7 +1,7 @@
 import pytest
 from rdflib import Graph
 from cheka import Cheka
-
+from os.path import join, abspath, dirname
 
 DATA_RDF = """
             @prefix dct: <http://purl.org/dc/terms/> .
@@ -88,30 +88,20 @@ def test_bad_graphs():
 
 
 def test_good_paths():
-    c = Cheka(data_graph_file_path="test_01_d.ttl", profiles_graph_file_path="test_01_p.ttl")
+    c = Cheka(data_graph_file_path=join(dirname(__file__), "test_01_d.ttl"), profiles_graph_file_path=join(dirname(__file__), "test_01_p.ttl"))
 
 
 def test_bad_paths():
     with pytest.raises(FileNotFoundError):
-        c = Cheka(data_graph_file_path="BROKEN", profiles_graph_file_path="test_01_p.ttl")
+        c = Cheka(data_graph_file_path="BORKED", profiles_graph_file_path=join(dirname(__file__), "test_01_p.ttl"))
 
 
 def test_strategies():
     # invalid strategy
     with pytest.raises(ValueError):
         c = Cheka(
-            data_graph_file_path="test_01_d.ttl",
-            profiles_graph_file_path="test_01_p.ttl",
+            data_graph_file_path=join(dirname(__file__), "test_01_d.ttl"),
+            profiles_graph_file_path=join(dirname(__file__), "test_01_p.ttl"),
         ).validate(strategy="other")
 
     # profile strategy, no profile_uri given
-
-
-if __name__ == "__main__":
-    test_good_strings()
-    test_bad_strings()
-    test_good_graphs()
-    test_bad_graphs()
-    test_good_paths()
-    test_bad_paths()
-    test_strategies()

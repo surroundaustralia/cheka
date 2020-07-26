@@ -1,0 +1,28 @@
+@prefix dct: <http://purl.org/dc/terms/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix void: <http://rdfs.org/ns/void#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@base <https://data.surroundaustralia.com/shapes/dataset/> .
+
+
+# this shape adds a requirement for one and only one dct:created date
+<CreatedShape>
+	a sh:NodeShape ;
+	sh:targetClass void:Dataset ;
+    sh:property [
+        sh:path dct:created ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:or (
+            [
+                sh:datatype xsd:date ;
+            ]
+            [
+                sh:datatype xsd:dateTime ;
+            ]
+        ) ;
+        sh:message "A void:Dataset must have a dct:created property indicating an xsd:date or xsd:dateTime" ;
+    ] ;
+.
