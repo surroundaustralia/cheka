@@ -1,3 +1,4 @@
+git+https://github.com/RDFLib/rdflib.git@master#egg=rdflib
 pyshacl
 requests
 pytest

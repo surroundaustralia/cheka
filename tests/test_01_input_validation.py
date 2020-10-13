@@ -61,47 +61,46 @@ PROFILES_RDF = """
 
 
 def test_good_strings():
-    c = Cheka(data_graph_ttl=DATA_RDF, profiles_graph_ttl=PROFILES_RDF)
+    c = Cheka(DATA_RDF, PROFILES_RDF)
 
 
 def test_bad_strings():
     with pytest.raises(ValueError):
-        c = Cheka(data_graph_ttl="blah", profiles_graph_ttl=PROFILES_RDF)
+        c = Cheka("blah", PROFILES_RDF)
 
 
 def test_good_graphs():
     dg = Graph().parse(data=DATA_RDF, format="turtle")
     pg = Graph().parse(data=PROFILES_RDF, format="turtle")
-    c = Cheka(data_graph_obj=dg, profiles_graph_obj=pg)
+    c = Cheka(dg, pg)
 
 
 def test_bad_graphs():
     dg = "not a graph"
     pg = Graph().parse(data=PROFILES_RDF, format="turtle")
-    with pytest.raises(AssertionError):
-        c = Cheka(data_graph_obj=dg, profiles_graph_obj=pg)
+    with pytest.raises(ValueError):
+        c = Cheka(dg, pg)
 
     # fail on an empty graph
     with pytest.raises(AssertionError):
         dg = Graph()
-        c = Cheka(data_graph_obj=dg, profiles_graph_obj=pg)
+        c = Cheka(dg, pg)
 
 
 def test_good_paths():
-    c = Cheka(data_graph_file_path=join(dirname(__file__), "test_01_d.ttl"), profiles_graph_file_path=join(dirname(__file__), "test_01_p.ttl"))
+    c = Cheka(join(dirname(__file__), "test_01_d.ttl"), join(dirname(__file__), "test_01_p.ttl"))
 
 
 def test_bad_paths():
-    with pytest.raises(FileNotFoundError):
-        c = Cheka(data_graph_file_path="BORKED", profiles_graph_file_path=join(dirname(__file__), "test_01_p.ttl"))
+    with pytest.raises(ValueError):
+        c = Cheka("BORKED", join(dirname(__file__), "test_01_p.ttl"))
 
 
 def test_strategies():
     # invalid strategy
     with pytest.raises(ValueError):
         c = Cheka(
-            data_graph_file_path=join(dirname(__file__), "test_01_d.ttl"),
-            profiles_graph_file_path=join(dirname(__file__), "test_01_p.ttl"),
+            join(dirname(__file__), "test_01_d.ttl"), join(dirname(__file__), "test_01_p.ttl")
         ).validate(strategy="other")
 
     # profile strategy, no profile_uri given

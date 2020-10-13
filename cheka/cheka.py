@@ -1,3 +1,5 @@
+from typing import Union
+from pathlib import Path
 from rdflib import Graph, URIRef, Namespace
 from rdflib.namespace import DCTERMS, PROF, RDF, SH
 from os.path import dirname, realpath, join
@@ -17,76 +19,22 @@ class Cheka:
     """
     def __init__(
         self,
-        data_graph_obj=None,
-        data_graph_ttl=None,
-        data_graph_file_path=None,
-        profiles_graph_obj=None,
-        profiles_graph_ttl=None,
-        profiles_graph_file_path=None,
+        data: Union[Graph, str],
+        profiles: Union[Graph, str],
     ):
         self.dg = Graph()
         self.pg = Graph()
         self.sg = Graph()
 
-        # validate inputs
-        assert any(elem is None for elem in [data_graph_obj, data_graph_ttl, data_graph_file_path]), \
-            "You must supply either a data graph object, string of RDF or a file path"
+        # validate & parse inputs
+        self.dg = self._parse_input_parameter(data, "data")
+        self.pg = self._parse_input_parameter(profiles, "profiles")
 
-        assert any(elem is None for elem in [profiles_graph_obj, profiles_graph_ttl, profiles_graph_file_path]), \
-            "You must supply either a profiles graph object, string of RDF or a file path"
-
-        if data_graph_obj is not None:
-            assert type(data_graph_obj) == Graph, \
-                "The value data_graph_obj, if supplied, must be an in-memory RDFlib Graph object"
-
-        if data_graph_ttl is not None:
-            assert type(data_graph_ttl) == str, \
-                "The value data_graph_rdf, if supplied, must be a string, of RDF"
-
-        if data_graph_file_path is not None:
-            assert type(data_graph_file_path) == str, \
-                "The value data_graph_file_path, if supplied, must be a string, of RDF, in the Turtle format"
-
-        if profiles_graph_obj is not None:
-            assert type(profiles_graph_obj) == Graph, \
-                "The value profiles_graph_obj, if supplied, must be an in-memory RDFlib Graph object"
-
-        if profiles_graph_ttl is not None:
-            assert type(profiles_graph_ttl) == str, \
-                "The value profiles_graph_ttl, if supplied, must be a string, of RDF, in the Turtle format"
-
-        if profiles_graph_file_path is not None:
-            assert type(profiles_graph_file_path) == str, \
-                "The value profiles_graph_file_path, if supplied, must be a string, of RDF"
-
-        # parse inputs
-        if data_graph_obj is not None:
-            self.dg = data_graph_obj
-        elif data_graph_ttl is not None:
-            try:
-                self.dg.parse(data=data_graph_ttl, format="turtle")
-            except Exception as e:
-                raise ValueError("You've supplied an invalid data_graph_ttl value. The parsing said: {}".format(e))
-        elif data_graph_file_path is not None:
-            self.dg.parse(
-                data_graph_file_path,
-                format=guess_format(data_graph_file_path)
-            )
-
-        if profiles_graph_obj is not None:
-            self.pg = profiles_graph_obj
-        elif profiles_graph_ttl is not None:
-            self.pg.parse(data=profiles_graph_ttl, format="turtle")
-        elif profiles_graph_file_path is not None:
-            self.pg.parse(
-                profiles_graph_file_path,
-                format=guess_format(profiles_graph_file_path)
-            )
-            self.profiles_graph_file_path = profiles_graph_file_path
-
-        assert len(self.dg) > 0, "The Data Graph has not been able to be read"
-
-        assert len(self.pg) > 0, "The Profiles Graph has not been able to be read"
+        # check graph aren't empty
+        if len(self.dg) == 0:
+            raise AssertionError("The data parameter you've supplied is a zero-length Graph")
+        if len(self.pg) == 0:
+            raise AssertionError("The profiles parameter you've supplied is a zero-length Graph")
 
         # make nice namespaces
         self.pg.bind('prof', PROF)
@@ -95,6 +43,40 @@ class Cheka:
 
         # expand the profiles graph
         self._expand_profiles_graph()
+
+    def _parse_input_parameter(self, parameter, parameter_name):
+        if type(parameter) not in [Graph, str]:
+            raise ValueError(
+                "The parameter '{}' must be either an RDFlib graph object, "
+                "a string of RDF (turtle format only) or the path of an RDF file (any format)".format(parameter_name)
+            )
+
+        if type(parameter) == Graph:
+            return parameter
+        elif type(parameter) == str:
+            try:
+                p = Path(parameter)
+
+                if Path.is_file(p):
+                    try:
+                        return Graph().parse(parameter, format="turtle")
+                    except Exception as e:
+                        raise ValueError(
+                            "You've supplied an invalid RDF file for parameter 'data', it could not be parsed. "
+                            "The parser said: {}".format(e))
+            except:
+                pass
+
+            try:
+                return Graph().parse(data=parameter, format="turtle")
+            except Exception as e:
+                raise ValueError(
+                    "You've supplied an invalid string value for parameter 'data' - no RDF data could be parse. "
+                    "Either you've supplied a path to a file that cannot be found or, if supplying a string of "
+                    "data, it is not valid in the Turtle format. The RDF parser said: {}".format(e))
+        else:
+            pass
+            # can't ever get here due to type checking earlier in constructor
 
     def _expand_profiles_graph(self):
         # type all profiles

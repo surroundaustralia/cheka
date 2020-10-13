@@ -18,6 +18,7 @@ def setup():
 def test_validate_simple():
     # should be true since the dataset has a title (<A>) and a creator (<B>)
     t1 = c.validate(profile_uri='http://example.org/profile/Profile_B')
+    print(t1)
     assert t1[0], t1[2]
 
     # should be false since the dataset does not have a created date (<C>)
@@ -27,3 +28,8 @@ def test_validate_simple():
     # should be false since the dataset claims conformance with <C> but has no created date
     t3 = c.validate()
     assert not t3[0], t3[2]
+
+
+if __name__ == "__main__":
+    c = Cheka('test_01_d.ttlx', 'test_01_p.ttl')
+    print("END")
