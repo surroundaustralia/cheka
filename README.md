@@ -33,20 +33,21 @@ used to perform SHACL validation.
 
 ## Use
 ### Input requirements
-To use Cheka, you must supply it with both a data graph to be validated and a profiles hierarchy. It will then use 
-conformance claims in the data graph to validate objects within it using validating resources it locates using the 
+To use Cheka, you must supply it with both a data (an RDF graph) to be validated and a profiles hierarchy (another RDF graph). It will then use 
+one of several selected strategies to validate objects within the data using validating resources it locates using the 
 profiles hierarchy.
 
 You *may* supply it with a couple of other flags too for other functions.
 
-The command line argumens (Python & BASH) are:
+The command line arguments (Python & BASH) are:
 
-**Flag** | **Input values** | **Notes**
---- | --- | ---
-`-d` / `--data` | an RDF file's path | Can be in most RDF formats with conventional file endings (e.g. `.ttl` for Turtle, `.jsonld` for JSON-LD)
-`-p` / `--profiles` | an SHACL file's path | As above. Profiles description must be formulated according to [PROF](https://www.w3.org/TR/dx-prof/) 
-`-i` / `--instance-uri` | the URI of an object in the data graph | The object must exist in the data graph. Ignored if `-u` is set 
-`-u` / `--profile-uri` | the URI of a profile in the profile hierarchy | Profile URIs can be anything that uniquely identifies the profile and is described, using PROF, in the profiles hierarchy
+**Flag** | **Input values** | **Requirement** | **Notes**  
+--- | --- | --- | ---
+`-d` / `--data` | an RDF file's path | mandatory | Can be in most RDF formats with conventional file endings (e.g. `.ttl` for Turtle, `.jsonld` for JSON-LD)
+`-p` / `--profiles` | an SHACL file's path | mandatory | As above. Profiles description must be formulated according to [PROF](https://www.w3.org/TR/dx-prof/) 
+`-s` / `--strategy` | 'shacl' or 'profile' | optional, 'shacl' default | Which strategy to use. See [Strategies](#strategies) description below
+`-u` / `--profile-uri` | the URI of a profile in the profile hierarchy | sometimes mandatory | If strategy 'profile' is selected, a profile URI must be give. The data is then validated using validators within that profile's hierarchy only
+`-r` / `--get-remotes` | optional, default False | If True, Cheka will pull in profile and validating SHACL artifacts referenced, but not described, in the profiles hierarchy, i.e. remote profiles online
  
 
 #### Data graph
@@ -69,7 +70,7 @@ This says that `<Object_X>` is meant to conform to `<Profile_Z>`.
 See the `tests/` folder for example data graphs.
 
 
-### Profiles hierarchy
+#### Profiles hierarchy
 This must also be an RDF file that contains a hierarchy of `prof:Profile` objects (including `dct:Standard` objects) 
 that are related to one another via the `prof:isProfileOf` property and each of which has a validating resource 
 indicated by relating it to a `prof:Profile` via a `prof:ResourceDescriptor` like this:
@@ -119,9 +120,42 @@ indicated to be validators by the `prof:ResourceDescriptor` classes that associa
 See the `tests/` folder for example profiles graphs.
 
 
+#### Strategies
+The following different strategies may be selected for use.
+
+**Name** | **Description**
+--- | ---
+*shacl* | Standard SHACL validation: all the SHACL validators from all the profiles found in the profiles hierarchy are used to validate the the given data using the SHACL validator targeting (usually per class)
+*profile* | xxx
+*claims* | *Not implemented yet*
+
+***shacl*** is the default strategy
+
+Note that the strategy is applied using the `s` flag. When using Cheka as a Python module, a different strategy may be applied per call to `Cheka.validate()`.
+
+
 ### Running
 Cheka uses the profiles graph to find all the SHACL validators it needs to validate a data graph. It returns a pySHACL 
 result with an additional element - the URI of the profile used for validation: [conforms, results_graph, results_text, profile_uri]. *conforms* is either True or False.
+
+#### As a Python module
+A Python program can import Cheka (`import cheka`) after installing it (`pip install cheka`). Then Cheka can be called in code like this:
+
+```python
+import cheka
+
+c = cheka.Cheka("data.ttl", "profiles_hierarchy.ttl")
+
+# to tell Cheka to pull in profiles/validators 
+# referenced but not defined in the profiles_hierarchy.ttl
+c.get_remote_profiles = True  
+c.validate(
+    strategy="profile", 
+    profile_uri="http://example.org/profile/Profile_C"
+)
+# a second validation - basic, default, shacl validation
+c.validate()
+```
 
 #### As a Python command line utility
 ```
@@ -134,7 +168,6 @@ If you make the cli.py script executable (`sudo chmod a+x cli.py`) then you can 
 ```
 ~$ ./cli.py -d DATA-GRAPH-FILE -p PROFILES-GRAPH-FILE
 ```
-
 
 #### As a BASH script
 The file `cheka` in the `bin/` directory is a BASH shell script that calls `cli.py`. Make it executable 
@@ -214,7 +247,7 @@ Or the following RDF:
 <https://surroundaustralia.com>  
 
 *creator:*  
-**Nicholas J. Car**  
+**Dr Nicholas J. Car**  
 *Data Systems Architect*  
 SURROUND Australia Pty. Ltd.  
 <nicholas.car@surroudaustralia.com>  
