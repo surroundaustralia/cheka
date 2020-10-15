@@ -31,5 +31,13 @@ def test_validate_simple():
 
 
 if __name__ == "__main__":
-    c = Cheka('test_01_d.ttlx', 'test_01_p.ttl')
-    print("END")
+    import logging
+    logging.basicConfig(level=logging.INFO)
+    c = Cheka('test_01_d.ttl', 'test_01_p.ttl')
+    c.get_remote_profiles = True
+    # print(c._get_profiles_hierarchy("http://example.org/profile/Profile_C"))
+    import pprint
+
+    # pprint.pprint(c.validate())
+    pprint.pprint(c.validate(strategy="claims", profile_uri="http://example.org/profile/Profile_C"))
+    # c.clear_cache()
