@@ -1,14 +1,14 @@
-@prefix dct: <http://purl.org/dc/terms/> .
-@prefix local_file: <file://> .
-@prefix prof: <http://www.w3.org/ns/dx/prof/> .
-@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
-@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix role: <http://www.w3.org/ns/dx/prof/role/> .
-@prefix sdo: <https://schema.org/> .
-@prefix sh: <http://www.w3.org/ns/shacl#> .
-@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
-@prefix void: <http://rdfs.org/ns/void#> .
-@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX local_file: <file://>
+PREFIX prof: <http://www.w3.org/ns/dx/prof/>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX role: <http://www.w3.org/ns/dx/prof/role/>
+PREFIX sdo: <https://schema.org/>
+PREFIX sh: <http://www.w3.org/ns/shacl#>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+PREFIX void: <http://rdfs.org/ns/void#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 
 <http://example.org/profile/Profile_C> a prof:Profile ;
     prof:hasResource [ a prof:ResourceDescriptor ;
@@ -18,26 +18,26 @@
 
 <https://data.surroundaustralia.com/shapes/dataset/CreatedShape> a sh:NodeShape ;
     sh:property [ sh:maxCount 1 ;
-            sh:message "A void:Dataset must have a dct:created property indicating an xsd:date or xsd:dateTime" ;
+            sh:message "A void:Dataset must have a dcterms:created property indicating an xsd:date or xsd:dateTime" ;
             sh:minCount 1 ;
             sh:or ( [ sh:datatype xsd:date ] [ sh:datatype xsd:dateTime ] ) ;
-            sh:path dct:created ] ;
+            sh:path dcterms:created ] ;
     sh:targetClass void:Dataset .
 
 <https://data.surroundaustralia.com/shapes/dataset/CreatorShape> a sh:NodeShape ;
-    sh:property [ sh:message "A void:Dataset must have a dct:creator property indicating an sdo:Organization or an sdo:Person" ;
+    sh:property [ sh:message "A void:Dataset must have a dcterms:creator property indicating an sdo:Organization or an sdo:Person" ;
             sh:minCount 1 ;
             sh:or ( [ sh:class sdo:Organization ] [ sh:class sdo:Person ] ) ;
-            sh:path dct:creator ] ;
+            sh:path dcterms:creator ] ;
     sh:targetClass void:Dataset .
 
 <https://data.surroundaustralia.com/shapes/dataset/TitleShape> a sh:NodeShape ;
-    sh:message "A void:Dataset must have either a skos:prefLabel, dct:title or rdfs:label property (a Literal) and may only have at most one of each per language." ;
+    sh:message "A void:Dataset must have either a skos:prefLabel, dcterms:title or rdfs:label property (a Literal) and may only have at most one of each per language." ;
     sh:targetClass void:Dataset ;
     sh:xone ( [ sh:property [ sh:minCount 1 ;
                         sh:path skos:prefLabel ;
                         sh:uniqueLang true ] ] [ sh:property [ sh:minCount 1 ;
-                        sh:path dct:title ;
+                        sh:path dcterms:title ;
                         sh:uniqueLang true ] ] [ sh:property [ sh:minCount 1 ;
                         sh:path rdfs:label ;
                         sh:uniqueLang true ] ] ) .
@@ -50,7 +50,7 @@
     prof:hasArtifact <file://test_01_shacl_k.ttl> ;
     prof:hasRole role:validation .
 
-<http://example.org/profile/Standard_A> a dct:Standard ;
+<http://example.org/profile/Standard_A> a dcterms:Standard ;
     prof:hasResource [ a prof:ResourceDescriptor ;
             prof:hasArtifact <file://test_01_shacl_j.ttl> ;
             prof:hasRole role:validation ] .

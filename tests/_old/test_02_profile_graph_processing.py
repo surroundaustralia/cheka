@@ -6,16 +6,16 @@ from cheka import Cheka
 @pytest.fixture
 def data_rdf():
     return """
-            @prefix dct: <http://purl.org/dc/terms/> .
-            @prefix sdo: <https://schema.org/> .
-            @prefix void: <http://rdfs.org/ns/void#> .
-            @base <http://example.org/dataset/> .
+            PREFIX dcterms: <http://purl.org/dc/terms/>
+            PREFIX sdo: <https://schema.org/>
+            PREFIX void: <http://rdfs.org/ns/void#>
+            BASE <http://example.org/dataset/>
 
             <One>
                 a void:Dataset ;
-                dct:title "Dataset One" ;
-                dct:conformsTo <http://example.org/profile/Profile_C> ;
-                dct:creator [
+                dcterms:title "Dataset One" ;
+                dcterms:conformsTo <http://example.org/profile/Profile_C> ;
+                dcterms:creator [
                     a sdo:Person ;
                     sdo:name "Nicholas J. Car" ;          
                 ] .
@@ -25,14 +25,14 @@ def data_rdf():
 @pytest.fixture
 def profiles_rdf():
     return """
-            PREFIX dct: <http://purl.org/dc/terms/> 
-            PREFIX prof: <http://www.w3.org/ns/dx/prof/> 
-            PREFIX role:  <http://www.w3.org/ns/dx/prof/role/> 
-            @base <http://example.org/profile/> .
+            PREFIX dcterms:http://purl.org/dc/terms/> 
+            PREFIX prof:http://www.w3.org/ns/dx/prof/> 
+            PREFIX role: http://www.w3.org/ns/dx/prof/role/> 
+            BASE <http://example.org/profile/>
 
 
             <Standard_A>
-                a dct:Standard ;
+                a dcterms:Standard ;
                 prof:hasResource [
                     a prof:ResourceDescriptor ;
                     prof:hasRole role:validation ;
@@ -82,8 +82,8 @@ def profiles_rdf():
 
 def _get_all_artifact_uris_sparql(graph):
     q = '''
-        PREFIX dcterms: <http://purl.org/dc/terms/> 
-        PREFIX prof: <http://www.w3.org/ns/dx/prof/>
+        PREFIX dcterms:http://purl.org/dc/terms/> 
+        PREFIX prof:http://www.w3.org/ns/dx/prof/>
         
         SELECT ?rd ?a
         WHERE {
@@ -117,8 +117,8 @@ def _get_all_artifact_uris_sparql(graph):
 
 def _get_artifact_uris_for_profile(graph, profile_uri):
     q = '''
-        PREFIX dcterms: <http://purl.org/dc/terms/> 
-        PREFIX prof: <http://www.w3.org/ns/dx/prof/>
+        PREFIX dcterms:http://purl.org/dc/terms/> 
+        PREFIX prof:http://www.w3.org/ns/dx/prof/>
 
         SELECT ?rd ?a
         WHERE {{

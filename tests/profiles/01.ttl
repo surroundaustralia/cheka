@@ -1,0 +1,15 @@
+PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX prof: <http://www.w3.org/ns/dx/prof/>
+PREFIX role:  <http://www.w3.org/ns/dx/prof/role/>
+BASE <http://example.org/profile/>
+
+
+<Standard_A>
+    a dcterms:Standard ;
+    prof:hasResource [
+        a prof:ResourceDescriptor ;
+        prof:hasRole role:validation ;
+        dcterms:conformsTo <https://www.w3.org/TR/shacl/> ;
+        prof:hasArtifact <file:///Users/nick/Work/cheka/tests/validators/dataset-title.ttl> ;
+    ]
+.

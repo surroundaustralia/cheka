@@ -1,17 +1,17 @@
-@prefix dct: <http://purl.org/dc/terms/> .
-@prefix owl: <http://www.w3.org/2002/07/owl#> .
-@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix sh: <http://www.w3.org/ns/shacl#> .
-@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
-@prefix void: <http://rdfs.org/ns/void#> .
-@base <https://data.surroundaustralia.com/shapes/dataset/> .
+PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX sh: <http://www.w3.org/ns/shacl#>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+PREFIX void: <http://rdfs.org/ns/void#>
+BASE <https://data.surroundaustralia.com/shapes/dataset/>
 
 
 # this shape ensures a Dataset has a title/label
 <TitleShape>
 	a sh:NodeShape ;
 	sh:targetClass void:Dataset ;
-    sh:message "A void:Dataset must have either a skos:prefLabel, dct:title or rdfs:label property (a Literal) and may only have at most one of each per language." ;
+    sh:message "A void:Dataset must have either a skos:prefLabel, dcterms:title or rdfs:label property (a Literal) and may only have at most one of each per language." ;
     sh:xone (
         [
             sh:property [
@@ -22,7 +22,7 @@
         ]
         [
             sh:property [
-                sh:path dct:title ;
+                sh:path dcterms:title ;
                 sh:minCount 1 ;
                 sh:uniqueLang true ;
             ]

@@ -1,0 +1,50 @@
+PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX prof: <http://www.w3.org/ns/dx/prof/>
+PREFIX role:  <http://www.w3.org/ns/dx/prof/role/>
+PREFIX local_file: <file://>
+BASE <http://example.org/profile/>
+
+
+<Standard_A>
+    a dcterms:Standard ;
+    prof:hasResource [
+        a prof:ResourceDescriptor ;
+        prof:hasRole role:validation ;
+        dcterms:conformsTo <https://www.w3.org/TR/shacl/> ;
+        prof:hasArtifact <file://test_01_shacl_j.ttl> ;
+    ]
+.
+
+<Standard_X>
+    a dcterms:Standard ;
+    # no RDs
+.
+
+<Profile_B>
+    a prof:Profile ;
+    prof:isProfileOf <Standard_A> ;
+    prof:isProfileOf <Profile_X> ;
+    prof:hasResource <Resource_Descriptor_P> ;
+.
+
+<Resource_Descriptor_P>
+    a prof:ResourceDescriptor ;
+    prof:hasRole role:validation ;
+    dcterms:conformsTo <https://www.w3.org/TR/shacl/> ;
+    prof:hasArtifact <file://test_01_shacl_k.ttl> ;
+.
+
+<Profile_C>
+    a prof:Profile ;
+    prof:isProfileOf <Profile_B> ;
+    prof:isProfileOf <Profile_X> ;
+    prof:isProfileOf <http://gsq.cat/profile/dcat2null> ;
+    prof:hasResource [
+        a prof:ResourceDescriptor ;
+        prof:hasRole role:validation ;
+        dcterms:conformsTo <https://www.w3.org/TR/shacl/> ;
+        prof:hasArtifact <file://test_01_shacl_l.ttl> ;
+    ] ;
+.
+
+<Profile_X> a prof:Profile .

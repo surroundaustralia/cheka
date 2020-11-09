@@ -1,0 +1,41 @@
+PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX prof: <http://www.w3.org/ns/dx/prof/>
+PREFIX role:  <http://www.w3.org/ns/dx/prof/role/>
+BASE <http://example.org/profile/>
+
+
+# title/label
+<Standard_A>
+    a dcterms:Standard ;
+    prof:hasResource [
+        a prof:ResourceDescriptor ;
+        prof:hasRole role:validation ;
+        dcterms:conformsTo <https://www.w3.org/TR/shacl/> ;
+        prof:hasArtifact <file://dataset-title.ttl> ;
+    ]
+.
+
+# creator
+<Profile_B>
+    a prof:Profile ;
+    prof:isProfileOf <Standard_A> ;
+    prof:hasResource [
+        a prof:ResourceDescriptor ;
+        prof:hasRole role:validation ;
+        dcterms:conformsTo <https://www.w3.org/TR/shacl/> ;
+        prof:hasArtifact <file://dataset-creator.ttl> ;
+    ] ;
+.
+
+
+# unrelated to Standard A & Profile B above
+# created
+<Profile_C>
+    a prof:Profile ;
+    prof:hasResource [
+        a prof:ResourceDescriptor ;
+        prof:hasRole role:validation ;
+        dcterms:conformsTo <https://www.w3.org/TR/shacl/> ;
+        prof:hasArtifact <file:///Users/nick/Work/cheka/tests/validators/dataset-created.ttl> ;
+    ] ;
+.

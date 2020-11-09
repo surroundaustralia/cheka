@@ -5,16 +5,16 @@ sys.path.append('..')
 
 
 DATA = """
-        @prefix dct: <http://purl.org/dc/terms/> .
-        @prefix sdo: <https://schema.org/> .
-        @prefix void: <http://rdfs.org/ns/void#> .
-        @base <http://example.org/dataset/> .
+        PREFIX dcterms: <http://purl.org/dc/terms/>
+        PREFIX sdo: <https://schema.org/>
+        PREFIX void: <http://rdfs.org/ns/void#>
+        BASE <http://example.org/dataset/>
         
         <One>
             a void:Dataset ;
-            dct:title "Dataset One" ;
-            dct:conformsTo <http://example.org/profile/Profile_C> ;
-            dct:creator [
+            dcterms:title "Dataset One" ;
+            dcterms:conformsTo <http://example.org/profile/Profile_C> ;
+            dcterms:creator [
                 a sdo:Person ;
                 sdo:name "Nicholas J. Car" .             
             ] .

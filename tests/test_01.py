@@ -1,43 +1,16 @@
-import pytest
-import sys
-sys.path.append('..')
-from cheka import Cheka
-
-"""
-These most basic tests ensure that a single thing in a data graph can be validated according to a profile hierarchy for 
-a given Profile (by URI). 
-"""
-global c
+from cheka.cheka import Cheka
+import logging
 
 
-def setup():
-    global c
-    c = Cheka('test_01_d.ttl', 'test_01_p.ttl')
+logging.basicConfig(level=logging.INFO)
 
-
-def test_validate_simple():
-    # should be true since the dataset has a title (<A>) and a creator (<B>)
-    t1 = c.validate(profile_uri='http://example.org/profile/Profile_B')
-    print(t1)
-    assert t1[0], t1[2]
-
-    # should be false since the dataset does not have a created date (<C>)
-    t2 = c.validate(profile_uri='http://example.org/profile/Profile_C')
-    assert not t2[0], t2[2]
-
-    # should be false since the dataset claims conformance with <C> but has no created date
-    t3 = c.validate()
-    assert not t3[0], t3[2]
-
-
-if __name__ == "__main__":
-    import logging
-    logging.basicConfig(level=logging.INFO)
-    c = Cheka('test_01_d.ttl', 'test_01_p.ttl')
-    c.get_remote_profiles = True
-    # print(c._get_profiles_hierarchy("http://example.org/profile/Profile_C"))
-    import pprint
-
-    # pprint.pprint(c.validate())
-    pprint.pprint(c.validate(strategy="claims", profile_uri="http://example.org/profile/Profile_C"))
-    # c.clear_cache()
+logging.info("test_01")
+v = Cheka("data/01.ttl", "profiles/01.ttl").validate()
+assert not v[0]  # False
+assert "<https://data.surroundaustralia.com/shapes/dataset/TitleShape>" in v[2]
+assert "<http://example.org/dataset/One>" in v[2]
+assert "A void:Dataset must have either a skos:prefLabel" in v[2]
+v = Cheka("data/06.ttl", "profiles/02.ttl").validate()
+assert not v[0]  # False
+assert "A void:Dataset must have either a skos:prefLabel" not in v[2]
+assert "A void:Dataset must have a dcterms:created property" in v[2]

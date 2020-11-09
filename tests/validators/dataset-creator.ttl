@@ -1,0 +1,28 @@
+PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX sdo: <https://schema.org/>
+PREFIX sh: <http://www.w3.org/ns/shacl#>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+PREFIX void: <http://rdfs.org/ns/void#>
+BASE <https://data.surroundaustralia.com/shapes/dataset/>
+
+
+# this shape adds a requirement for a dcterms:creator
+<CreatorShape>
+	a sh:NodeShape ;
+	sh:targetClass void:Dataset ;
+    sh:property [
+        sh:path dcterms:creator ;
+        sh:minCount 1 ;
+        sh:or (
+            [
+                sh:class sdo:Organization ;
+            ]
+            [
+                sh:class sdo:Person ;
+            ]
+        ) ;
+        sh:message "A void:Dataset must have a dcterms:creator property indicating an sdo:Organization or an sdo:Person" ;
+    ] ;
+.

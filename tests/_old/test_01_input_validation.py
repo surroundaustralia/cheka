@@ -4,31 +4,31 @@ from cheka import Cheka
 from os.path import join, abspath, dirname
 
 DATA_RDF = """
-            @prefix dct: <http://purl.org/dc/terms/> .
-            @prefix sdo: <https://schema.org/> .
-            @prefix void: <http://rdfs.org/ns/void#> .
-            @base <http://example.org/dataset/> .
+            PREFIX dcterms: <http://purl.org/dc/terms/>
+            PREFIX sdo: <https://schema.org/>
+            PREFIX void: <http://rdfs.org/ns/void#>
+            BASE <http://example.org/dataset/>
     
             <One>
                 a void:Dataset ;
-                dct:title "Dataset One" ;
-                dct:conformsTo <http://example.org/profile/Profile_C> ;
-                dct:creator [
+                dcterms:title "Dataset One" ;
+                dcterms:conformsTo <http://example.org/profile/Profile_C> ;
+                dcterms:creator [
                     a sdo:Person ;
                     sdo:name "Nicholas J. Car" ;          
                 ] .
             """
 
 PROFILES_RDF = """
-                @prefix dct: <http://purl.org/dc/terms/> .
-                @prefix prof: <http://www.w3.org/ns/dx/prof/> .
-                @prefix role:  <http://www.w3.org/ns/dx/prof/role/> .
-                @prefix local_file: <file://> .
-                @base <http://example.org/profile/> .
+                PREFIX dcterms: <http://purl.org/dc/terms/>
+                PREFIX prof: <http://www.w3.org/ns/dx/prof/>
+                PREFIX role:  <http://www.w3.org/ns/dx/prof/role/>
+                PREFIX local_file: <file://>
+                BASE <http://example.org/profile/>
                 
                 
                 <Standard_A>
-                    a dct:Standard ;
+                    a dcterms:Standard ;
                     prof:hasResource [
                         a prof:ResourceDescriptor ;
                         prof:hasRole role:validation ;

@@ -1,22 +1,21 @@
-@prefix dct: <http://purl.org/dc/terms/> .
-@prefix prof: <http://www.w3.org/ns/dx/prof/> .
-@prefix role:  <http://www.w3.org/ns/dx/prof/role/> .
-@prefix local_file: <file://> .
-@base <http://example.org/profile/> .
+PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX prof: <http://www.w3.org/ns/dx/prof/>
+PREFIX role:  <http://www.w3.org/ns/dx/prof/role/>
+BASE <http://example.org/profile/>
 
 
 <Standard_A>
-    a dct:Standard ;
+    a dcterms:Standard ;
     prof:hasResource [
         a prof:ResourceDescriptor ;
         prof:hasRole role:validation ;
-        dct:conformsTo <https://www.w3.org/TR/shacl/> ;
-        prof:hasArtifact <file://test_01_shacl_j.ttl> ;
+        dcterms:conformsTo <https://www.w3.org/TR/shacl/> ;
+        prof:hasArtifact <file://../validators/dataset-title.ttl> ;
     ]
 .
 
 <Standard_X>
-    a dct:Standard ;
+    a dcterms:Standard ;
     # no RDs
 .
 
@@ -30,8 +29,8 @@
 <Resource_Descriptor_P>
     a prof:ResourceDescriptor ;
     prof:hasRole role:validation ;
-    dct:conformsTo <https://www.w3.org/TR/shacl/> ;
-    prof:hasArtifact <file://test_01_shacl_k.ttl> ;
+    dcterms:conformsTo <https://www.w3.org/TR/shacl/> ;
+    prof:hasArtifact <file:///../validators/dataset-creator.ttl> ;
 .
 
 <Profile_C>
@@ -42,8 +41,8 @@
     prof:hasResource [
         a prof:ResourceDescriptor ;
         prof:hasRole role:validation ;
-        dct:conformsTo <https://www.w3.org/TR/shacl/> ;
-        prof:hasArtifact <file://test_01_shacl_l.ttl> ;
+        dcterms:conformsTo <https://www.w3.org/TR/shacl/> ;
+        prof:hasArtifact <file:///../validators/dataset-created.ttl> ;
     ] ;
 .
 

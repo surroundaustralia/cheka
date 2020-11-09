@@ -1,0 +1,20 @@
+PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX sdo: <https://schema.org/>
+PREFIX void: <http://rdfs.org/ns/void#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+BASE <http://example.org/dataset/>
+
+
+<One>
+    a void:Dataset ;
+    dcterms:title "Dataset One" ;
+    dcterms:conformsTo <http://example.org/profile/Profile_C> ;
+    dcterms:creator <https://orcid.org/0000-0002-8742-7730> ;
+    dcterms:created "2001-11-12"^^xsd:date ;
+    dcterms:modified "2001-11-12"^^xsd:date ;
+.
+
+<https://orcid.org/0000-0002-8742-7730>
+    a sdo:Person ;
+    sdo:name "Nicholas J. Car" ;
+.
