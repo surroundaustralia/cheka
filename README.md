@@ -44,7 +44,7 @@ The command line arguments (Python & BASH) are:
 **Flag** | **Input values** | **Requirement** | **Notes**  
 --- | --- | --- | ---
 `-d` / `--data` | an RDF file's path | mandatory | Can be in most RDF formats with conventional file endings (e.g. `.ttl` for Turtle, `.jsonld` for JSON-LD)
-`-p` / `--profiles` | an SHACL file's path | mandatory | As above. Profiles description must be formulated according to [PROF](https://www.w3.org/TR/dx-prof/) 
+`-p` / `--profiles` | a profile file's path | mandatory | As above. Profiles description must be formulated according to [PROF](https://www.w3.org/TR/dx-prof/) 
 `-s` / `--strategy` | 'shacl' or 'profile' | optional, 'shacl' default | Which strategy to use. See [Strategies](#strategies) description below
 `-u` / `--profile-uri` | the URI of a profile in the profile hierarchy | sometimes mandatory | If strategy 'profile' is selected, a profile URI must be give. The data is then validated using validators within that profile's hierarchy only
 `-r` / `--get-remotes` | none | optional, default False | If True, Cheka will pull in profile and validating SHACL artifacts referenced, but not described, in the profiles hierarchy, i.e. remote profiles online
@@ -125,9 +125,9 @@ The following different strategies may be selected for use.
 
 **Name** | **Description**
 --- | ---
-*shacl* | Standard SHACL validation: all the SHACL validators from all the profiles found in the profiles hierarchy are used to validate the the given data using the SHACL validator targeting (usually per class)
-*profile* | Validates a
-*claims* | *Not implemented yet*
+*shacl* | Standard SHACL validation: all the SHACL validators from all the profiles found in the profiles hierarchy are used to validate the the given data using the SHACL validators' targeting (usually per class)
+*profile* | Validates given data using the validators found linked to a profile and all the profiles in that profile's hierarchy. This is the "main" Cheka strategy, as opposed to *shacl* which is "normal" SHACL validation
+*claims* | *Not implemented yet, likely February 2021*
 
 ***shacl*** is the default strategy
 
