@@ -6,30 +6,20 @@ BASE <http://example.org/profile/>
 
 
 # title/label
-<Standard_A>
+<Profile_A>
     a dcterms:Standard ;
+    prof:isProfileOf <https://w3id.org/profile/chekatest> ;
     prof:hasResource [
         a prof:ResourceDescriptor ;
         prof:hasRole role:validation ;
         dcterms:conformsTo <https://www.w3.org/TR/shacl/> ;
-        prof:hasArtifact <file:///../validators/dataset-title.ttl> ;
+        prof:hasArtifact <file://../validators/dataset-title.ttl> ;
     ]
 .
 
-# creator
-<Profile_B>
-    a prof:Profile ;
-    prof:isProfileOf <Standard_A> ;
-    prof:hasResource [
-        a prof:ResourceDescriptor ;
-        prof:hasRole role:validation ;
-        dcterms:conformsTo <https://www.w3.org/TR/shacl/> ;
-        prof:hasArtifact <file:///../validators/dataset-creator.ttl> ;
-    ] ;
-.
 
-# modified
-<https://w3id.org/profile/chekatest>
-    a prof:Profile ;
-    rdfs:comment "A remote profile for testing Cheka's retrieval of such" ;
-.
+## modified
+#<https://w3id.org/profile/chekatest>
+#    a prof:Profile ;
+#    rdfs:comment "A remote profile for testing Cheka's retrieval of such" ;
+#.

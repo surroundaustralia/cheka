@@ -30,14 +30,13 @@ BASE <http://example.org/profile/>
     a prof:ResourceDescriptor ;
     prof:hasRole role:validation ;
     dcterms:conformsTo <https://www.w3.org/TR/shacl/> ;
-    prof:hasArtifact <file:///../validators/dataset-creator.ttl> ;
+    prof:hasArtifact <file://../validators/dataset-creator.ttl> ;
 .
 
 <Profile_C>
     a prof:Profile ;
     prof:isProfileOf <Profile_B> ;
     prof:isProfileOf <Profile_X> ;
-    prof:isProfileOf <http://gsq.cat/profile/dcat2null> ;
     prof:hasResource [
         a prof:ResourceDescriptor ;
         prof:hasRole role:validation ;
@@ -46,4 +45,4 @@ BASE <http://example.org/profile/>
     ] ;
 .
 
-<Profile_X> a prof:Profile .
+<Profile_Y> a prof:Profile .

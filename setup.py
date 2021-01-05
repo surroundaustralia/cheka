@@ -40,6 +40,7 @@ setup(
     license='LICENSE',
     keywords=['Semantic Web', 'OWL', 'ontology', 'SHACL', 'validation', 'profiles'],
     long_description=long_description,
+    long_description_content_type='text/markdown',
     classifiers=[
         'Development Status :: 4 - Beta',
         'Topic :: Utilities',

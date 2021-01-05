@@ -26,7 +26,7 @@ if __name__ == '__main__':
     validation_type = parser.add_mutually_exclusive_group()
 
     validation_type.add_argument(
-        '-s', '--shacl-only',
+        '-s', '--shacl',
         help='\'SHACL\': use this flag to perform normal SHACL validation. Prevents any profiles-based validation.',
         action='store_false'
     )
@@ -42,6 +42,12 @@ if __name__ == '__main__':
         '-u', '--profile-uri',
         help='The specific profile URI that you wish to validate the data graph against. This need not be set, in which'
              'case, Cheka will look for conformance claims (dct:conformsTo) in the data graph.',
+        type=str
+    )
+
+    validation_type.add_argument(
+        '-r', '--get-remotes',
+        help='If set, tells Cheka to try and look up profile information, e.g. validators, via the profile\'s URI.',
         type=str
     )
 

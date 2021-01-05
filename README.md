@@ -47,7 +47,7 @@ The command line arguments (Python & BASH) are:
 `-p` / `--profiles` | an SHACL file's path | mandatory | As above. Profiles description must be formulated according to [PROF](https://www.w3.org/TR/dx-prof/) 
 `-s` / `--strategy` | 'shacl' or 'profile' | optional, 'shacl' default | Which strategy to use. See [Strategies](#strategies) description below
 `-u` / `--profile-uri` | the URI of a profile in the profile hierarchy | sometimes mandatory | If strategy 'profile' is selected, a profile URI must be give. The data is then validated using validators within that profile's hierarchy only
-`-r` / `--get-remotes` | optional, default False | If True, Cheka will pull in profile and validating SHACL artifacts referenced, but not described, in the profiles hierarchy, i.e. remote profiles online
+`-r` / `--get-remotes` | none | optional, default False | If True, Cheka will pull in profile and validating SHACL artifacts referenced, but not described, in the profiles hierarchy, i.e. remote profiles online
  
 
 #### Data graph
@@ -126,12 +126,12 @@ The following different strategies may be selected for use.
 **Name** | **Description**
 --- | ---
 *shacl* | Standard SHACL validation: all the SHACL validators from all the profiles found in the profiles hierarchy are used to validate the the given data using the SHACL validator targeting (usually per class)
-*profile* | xxx
+*profile* | Validates a
 *claims* | *Not implemented yet*
 
 ***shacl*** is the default strategy
 
-Note that the strategy is applied using the `s` flag. When using Cheka as a Python module, a different strategy may be applied per call to `Cheka.validate()`.
+Note that the strategy is applied using the `-s` flag. When using Cheka as a Python module, a different strategy may be applied per call to `Cheka.validate()`.
 
 
 ### Running
@@ -149,12 +149,15 @@ c = cheka.Cheka("data.ttl", "profiles_hierarchy.ttl")
 # to tell Cheka to pull in profiles/validators 
 # referenced but not defined in the profiles_hierarchy.ttl
 c.get_remote_profiles = True  
+
+# a simple validation - basic, default, shacl-only (no use of profiles)
+c.validate()
+
+# profile-based vaidation, starting with the profile Profile_C 
 c.validate(
     strategy="profile", 
     profile_uri="http://example.org/profile/Profile_C"
 )
-# a second validation - basic, default, shacl validation
-c.validate()
 ```
 
 #### As a Python command line utility

@@ -1,0 +1,14 @@
+# 1. delete build/ , dist/, pyLODE.egg-info
+> rm -rf build dist cheka.egg-info
+
+# 2. change version no in cheka/__init__.py
+
+# 3. $ git commit changes
+
+# 4. $ git tag <VERSION_NO>
+
+# 5. $ git push --tags
+
+# 6. $ python setup.py sdist bdist_wheel
+
+# 7. $ twine upload dist/*

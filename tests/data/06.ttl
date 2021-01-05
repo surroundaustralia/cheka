@@ -9,6 +9,7 @@ BASE <http://example.org/dataset/>
     dcterms:title "Dataset One" ;
     dcterms:conformsTo <http://example.org/profile/Profile_C> ;
     dcterms:creator <https://orcid.org/0000-0002-8742-7730> ; # Nicholas J. Car, IDed via ORCID
+    dcterms:source "some random statement" ;
 .
 
 <https://orcid.org/0000-0002-8742-7730>

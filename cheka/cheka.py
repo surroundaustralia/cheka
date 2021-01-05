@@ -10,11 +10,33 @@ import uuid
 import json
 import pickle
 import shutil
+from urllib.request import urlopen, Request
+from urllib.parse import urlencode
+from urllib.error import HTTPError, URLError
+
+
+class UnknownProfileError(ValueError):
+    pass
 
 
 class Cheka:
     ROLE = Namespace("http://www.w3.org/ns/dx/prof/role/")
-
+    RDF_SERIALIZER_TYPES_MAP = {
+        "text/turtle": "turtle",
+        "text/n3": "n3",
+        "application/n-triples": "nt",
+        "application/ld+json": "json-ld",
+        "application/rdf+xml": "xml",
+        # Some common but incorrect mimetypes
+        "application/rdf": "xml",
+        "application/rdf xml": "xml",
+        "application/json": "json-ld",
+        "application/ld json": "json-ld",
+        "text/ttl": "turtle",
+        "text/ntriples": "nt",
+        "text/n-triples": "nt",
+        "text/plain": "nt",  # text/plain is the old/deprecated mimetype for n-triples
+    }
 
     """The Cheka program main class that contains all of the functionality
 
@@ -126,10 +148,12 @@ class Cheka:
             map = json.load(f)
 
         for profile in pg.subjects(predicate=RDF.type, object=PROF.Profile):
+            logging.debug("profile {}".format(profile))
             # if we already have a validator for this profile, do nothing
             if str(profile) in map.keys():
                 logging.info("Using cached validators for Profile {}".format(profile))
             else:
+                logging.info("Storing Profile {} in cache".format(profile))
                 validator_graph = Graph()
                 for rd in pg.objects(subject=profile, predicate=PROF.hasResource):
                     if (rd, PROF.hasRole, self.ROLE.validation) in pg \
@@ -137,10 +161,39 @@ class Cheka:
                         for artifact_uri in pg.objects(subject=rd, predicate=PROF.hasArtifact):
                             # artifacts are either local file URIs or HTTP/HTTPS URIs
                             # either way, RDFlib's parse() can handle it
+                            logging.debug("Seen artifact URI {}".format(artifact_uri))
                             try:
-                                validator_graph.parse(artifact_uri.lstrip("file://"))
+                                if str(artifact_uri).startswith("http"):
+                                    logging.debug("Attempting to parse remote artifact {}".format(artifact_uri))
+                                    rdf_request_headers = {
+                                        "Accept": "text/turtle,application/x-turtle, "
+                                                  "application/rdf+xml, "
+                                                  "application/ld+json"
+                                    }
+                                    req = Request(str(artifact_uri), None, rdf_request_headers)
+                                    with urlopen(req) as f:
+                                        data = f.read().decode('utf-8')
+                                    validator_graph.parse(data=data)
+                                elif str(artifact_uri).startswith("file"):
+                                    artifact_path = Path(str(artifact_uri).replace("file://", ""))
+                                    logging.debug("Attempting to parse local artifact {}".format(artifact_path))
+                                    if Path.is_file(artifact_path):
+                                        logging.debug("Found file at location {}".format(artifact_path))
+                                        validator_graph.parse(artifact_path)
+                                    else:
+                                        artifact_path = Path(__file__).parent.parent / "tests" / "validators" / artifact_path
+                                        if Path.is_file(artifact_path):
+                                            logging.debug("Found file in tests validators dir {}".format(artifact_path))
+                                            validator_graph.parse(artifact_path)
+                                        else:
+                                            raise ValueError("Validator local file indicated at {} but not found"
+                                                             .format(artifact_path))
+                                else:
+                                    raise ValueError("Validator not indicated as wither a web resource ('http...') or "
+                                                     "a local file ('file:///...') in its URI so it cannot be found")
                             except Exception as e:
                                 # do nothing, can't parse RDF
+                                print(e)
                                 logging.info(
                                     "Attempted to dereference Artifact {} but got an error: {}"
                                         .format(artifact_uri, str(e))
@@ -166,10 +219,10 @@ class Cheka:
                 logging.info("No validators are recorded for Profile {}".format(profile))
 
     def _get_profiles_hierarchy(self, pg, profile_uri: str) -> set:
+        print("_get_profiles_hierarchy()")
         profiles = []
         for o in pg.objects(subject=URIRef(profile_uri), predicate=PROF.isProfileOf*ZeroOrMore):
             profiles.append(str(o))
-
         return set(profiles)
 
     def _get_artifact_uris_per_profile(self, pg: Graph, profile_uri: URIRef):
@@ -331,17 +384,17 @@ class Cheka:
                         missing.append(h)
                 if len(missing) > 0:
                     logging.info(
-                        "The supplied profiles graph and the profiles cache do not contain information for:\n{}"
-                        .format("\n".join(missing))
+                        "The supplied profiles graph and the profiles cache do not contain information for the "
+                        "profiles:\n{}.\nAttempting to get info online".format("\n".join(missing))
                     )
                 for m in missing:
                     self._dereference_and_cache_remote_profile(m)
 
-            if len(hierarchies) == 1 and hierarchies.pop() == profile_uri:
-                raise ValueError(
-                    "Unknown profile: the profile_uri value you supplied validate() didn't match any known profile "
-                    "URIs"
-                )
+            # if len(hierarchies) == 1 and hierarchies.pop() == profile_uri:
+            #     raise UnknownProfileError(
+            #         "The profile_uri value you supplied validate(), {}, didn't match any known profile URIs"
+            #             .format(profile_uri)
+            #     )
             vs = []
             for h in hierarchies:
                 inc = validators_map.get(h)
@@ -349,8 +402,8 @@ class Cheka:
                     with open(Path(self.VALIDATORS_DIR / (inc + ".p")), "rb") as f:
                         vg = vg + pickle.load(f)
                 vs.append((h,) + self._validate_pyshacl(vg))
-
-            return vs
+            all_valid = all([x[1] for x in vs])
+            return [all_valid] + vs
 
         elif strategy == "claims":
             raise NotImplemented("This strategy is planned but not implemented yet")
@@ -380,6 +433,8 @@ class Cheka:
         g = Graph()
         try:
             g.parse(location=profile_uri)
+            if len(g) == 0:
+                r = urlopen(Request(profile_uri, headers={'Accept-Profile': "<>"}))
         except Exception as e:
             # do nothing, can't parse RDF
             logging.info(
